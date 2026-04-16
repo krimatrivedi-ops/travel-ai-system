@@ -1,0 +1,61 @@
+# generated: 2026-04-15T16:15:05+05:30
+# last_updated: 2026-04-15T23:00:00+00:00
+# project: travel-ai-system
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: /home/ubuntu/Desktop/krima/travel-ai-system/_bmad-output/implementation-artifacts
+# source_epics: /home/ubuntu/Desktop/krima/travel-ai-system/_bmad-output/planning-artifacts/epics.md
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - ready-for-dev: Retrospective facilitation document created (create-story)
+#   - done: Retrospective session completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: "2026-04-15T16:15:05+05:30"
+last_updated: "2026-04-15T23:00:00+00:00"
+project: travel-ai-system
+project_key: NOKEY
+tracking_system: file-system
+story_location: /home/ubuntu/Desktop/krima/travel-ai-system/_bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: done
+  1-1-weather-via-free-reliable-apis: done
+  1-2-itemized-pricing-via-free-apis-no-invented-totals: done
+  epic-1-retrospective: done
+
+  epic-2: done
+  2-1-persist-generated-itineraries: done
+  2-2-past-itineraries-list: done
+  2-3-pdf-download-per-itinerary: done
+  epic-2-retrospective: done
+
+  epic-3: done
+  3-1-itinerary-detail-add-and-modify: done
+  3-2-preference-snapshot-for-replanning-and-edits: done
+  epic-3-retrospective: done

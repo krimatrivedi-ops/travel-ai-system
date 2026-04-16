@@ -1,0 +1,8 @@
+To revert the changes made for prompt31.txt:
+
+1. Delete the file `agents/decision_agent.py`.
+2. Remove the `decision_agent` integration from `app.py` (and `ui/server.py` if applicable).
+   - Remove `from agents.decision_agent import DecisionAgent`
+   - Remove `decision_agent = DecisionAgent()`
+   - Revert the `/itinerary/optimize` endpoint to its previous state (removing the decision analysis block).
+3. Delete this `revert.txt` file.
