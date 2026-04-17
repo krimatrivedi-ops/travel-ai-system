@@ -40,8 +40,11 @@ The JSON must have exactly this shape:
 }}
 
 Rules:
-- Modify ONLY what the event requires (e.g. move indoor if rain; small time shifts for USER_EDIT).
+- Modify ONLY what the event requires (e.g. move indoor if rain; small time shifts for USER_EDIT; remove or replace a place if PLACE_CLOSED).
+- WEATHER_CHANGE (e.g. rain, heavy rain): prioritize rain-friendly and indoor activities. Replace or shorten outdoor-only segments (walks, viewpoints, parks) with indoor alternatives (museums, galleries, covered markets, malls, indoor cultural sites) when plausible. If a day is mostly outdoor and cannot be fully converted, narrow that day to fewer segments or add a clear weather-flex note in day summary and segment descriptions; keep the day usable rather than "closing" it unless the user payload explicitly asks to cancel.
+- In "changes", always mention weather-driven rationale (e.g. "Day 2: shifted outdoor walk to indoor gallery due to rain").
 - If USER_EDIT has action="add", insert the specified place into the most logical time slot for that day/itinerary.
+- If Event is PLACE_CLOSED, you MUST either remove that specific segment or replace it with a suitable alternative nearby that is currently open.
 - Preserve days[].day numbering and overall length of days array.
 - Keep each segment with: time_label, title, place_name, description, and optional meal_suggestion, transport_note, local_tip, lat, lon, weather fields, and pricing objects if present.
 - Do NOT invent numeric currency amounts, fares, or hotel prices — preserve existing pricing metadata or omit; never add fake prices.

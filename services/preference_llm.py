@@ -32,8 +32,9 @@ Optional: party_size (integer), accessibility_notes (string)
 
 Rules:
 - Merge the latest user message into persona; keep prior values unless updated.
-- If any required field is still unknown or vague, set complete=false and provide ONE short, friendly next_question targeting the most important gap.
-- When every required field is confidently filled, set complete=true and next_question=null.
+- NEVER infer, guess, or "silently invent" values for required fields. If a field has not been explicitly provided by the user, leave it null or unchanged.
+- If any required field is still unknown, missing, or vague, set complete=false and provide ONE short, friendly next_question targeting that specific gap.
+- Set complete=true ONLY when every required field has been explicitly and confidently provided by the user.
 - Respond with ONLY valid JSON, no markdown, in this shape:
 {"persona":{...},"complete":true|false,"next_question":string|null}
 """

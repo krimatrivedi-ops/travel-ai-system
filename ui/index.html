@@ -40,7 +40,8 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
         }
         .chat-log {
-            height: 280px;
+            min-height: 360px;
+            height: min(52vh, 560px);
             overflow-y: auto;
             padding: 1rem;
             background: #fafbfc;
@@ -75,10 +76,20 @@
         tr.saved-trip-row { cursor: pointer; }
         tr.saved-trip-row:hover { background: #f8fafc !important; }
         .saved-trip-pdf-btn { font-size: 0.75rem; padding: 0.15rem 0.45rem; }
+        .pipeline-status {
+            padding: 0.65rem 0.85rem;
+            background: var(--accent-soft);
+            border: 1px solid #bfdbfe;
+            border-radius: 0.5rem;
+        }
+        .pipeline-status .pipeline-status-hint {
+            font-size: 0.72rem;
+            margin-top: 0.15rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container py-4 py-md-5" style="max-width: 1100px;">
+    <div class="container py-4 py-md-5" style="max-width: 1280px;">
         <div class="hero">
             <h1 class="mb-2">Travel AI</h1>
             <p>Describe where you want to go. We’ll confirm your preferences, then build a multi-day itinerary—one row per day; open a row for the full agent-grade detail.</p>
@@ -114,12 +125,22 @@
         </div>
 
         <div class="row g-4">
-            <div class="col-lg-6">
+            <div class="col-lg-7">
                 <div class="panel p-4 h-100">
                     <h2 class="h5 fw-semibold mb-3">Your trip request</h2>
                     <p class="small text-muted mb-3">Answer follow-up questions so the plan matches budget, pace, and style.</p>
 
                     <div id="chatLog" class="chat-log mb-3" aria-live="polite"></div>
+
+                    <div id="pipelineStatus" class="pipeline-status mb-3" style="display:none;" role="status" aria-live="polite">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
+                                <div class="text-muted pipeline-status-hint">Typical steps while agents run — timing varies.</div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="input-group mb-3">
                         <input type="text" id="msgInput" class="form-control" placeholder="e.g. Weekend in Lisbon, cultural focus, moderate budget…" autocomplete="off">
@@ -136,7 +157,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6">
+            <div class="col-lg-5">
                 <div class="panel p-4 h-100">
                     <h2 class="h5 fw-semibold mb-1">Itinerary</h2>
                     <p class="small text-muted mb-2">One row per day. Click a row to open timing, places, meals, stay, and tips. Use <strong>My trips</strong> above to reopen a saved plan.</p>
@@ -169,6 +190,15 @@
                             <p class="small text-muted mb-2">Ask for dining (food, lunch, cafe) <strong>or</strong> sights (museum, gallery, attraction). We return ranked recommendations (not direct edit commands), then you choose one to apply. After apply, estimates refresh automatically.</p>
                             <p class="small text-muted mb-2">Uses your <strong>session</strong> destination for nearby search (not the saved-trip snapshot alone). Start a new chat if suggestions target the wrong city.</p>
                             <p id="optimizeNoItinHint" class="small text-warning mb-2" style="display:none;">Generate an itinerary first to use this.</p>
+                            <div id="pipelineStatusOptimize" class="pipeline-status mb-2" style="display:none;" role="status" aria-live="polite">
+                                <div class="d-flex align-items-start gap-2">
+                                    <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
+                                        <div class="text-muted pipeline-status-hint">Typical steps while agents run — timing varies.</div>
+                                    </div>
+                                </div>
+                            </div>
                             <label for="optimizeRequestInput" class="form-label small mb-1">Your request</label>
                             <textarea id="optimizeRequestInput" class="form-control form-control-sm mb-2" rows="2" placeholder="e.g. Dal Baati for lunch, or a modern art museum this afternoon…" disabled autocomplete="off"></textarea>
                             <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -181,14 +211,17 @@
                         </div>
                     </div>
 
-                    <div class="demo-collapse mt-4 pt-3 border-top">
+                    <div class="demo-collapse mt-4 pt-3 border-top" id="demoToolsSection" style="display:none;">
                         <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#demoTools" aria-expanded="false">
-                            Demo tools (weather &amp; edits)
+                            Demo tools (weather &amp; events)
                         </button>
                         <div class="collapse mt-2" id="demoTools">
                             <p class="small text-muted mb-2">For internal demos: simulate reactive replanning.</p>
+                            <div id="eventNotification" class="alert alert-info py-2 small mb-3" style="display:none;" role="status">
+                                <strong>Background update:</strong> <span id="eventNotificationText"></span>
+                            </div>
                             <button type="button" class="btn btn-warning btn-sm me-2" id="btnRain">Simulate rain</button>
-                            <button type="button" class="btn btn-info btn-sm" id="btnEdit">Simulate user edit</button>
+                            <button type="button" class="btn btn-danger btn-sm" id="btnPlaceClosed">Place is closed</button>
                         </div>
                     </div>
                 </div>
@@ -227,6 +260,50 @@
         let editDaySnapshot = null;
         let cachedPersonaPartial = {};
         let lastOptimizationSnapshot = null;
+
+        const PIPELINE_STEPS_CHAT = [
+            'Checking preferences…',
+            'Loading map places…',
+            'Planning your days…',
+            'Applying pricing & estimates…'
+        ];
+        const PIPELINE_STEPS_OPTIMIZE = [
+            'Fetching place candidates…',
+            'Running optimization agent…',
+            'Preparing suggestions…'
+        ];
+        const PIPELINE_STEPS_APPLY = [
+            'Updating your itinerary…',
+            'Refreshing pricing…'
+        ];
+
+        function startPipeline(containerId, stepKey) {
+            const root = document.getElementById(containerId);
+            if (!root) {
+                return function noop() {};
+            }
+            const label = root.querySelector('.pipeline-status-label');
+            const steps = stepKey === 'optimize'
+                ? PIPELINE_STEPS_OPTIMIZE
+                : (stepKey === 'apply' ? PIPELINE_STEPS_APPLY : PIPELINE_STEPS_CHAT);
+            root.style.display = 'block';
+            if (label) label.textContent = 'Working…';
+            let stepIndex = 0;
+            let delayTimer = null;
+            let rotateTimer = null;
+            delayTimer = setTimeout(function () {
+                if (label) label.textContent = steps[0];
+                rotateTimer = setInterval(function () {
+                    stepIndex = (stepIndex + 1) % steps.length;
+                    if (label) label.textContent = steps[stepIndex];
+                }, 1800);
+            }, 500);
+            return function stopPipeline() {
+                if (delayTimer) clearTimeout(delayTimer);
+                if (rotateTimer) clearInterval(rotateTimer);
+                root.style.display = 'none';
+            };
+        }
 
         function appendChat(role, text) {
             const wrap = document.createElement('div');
@@ -575,6 +652,7 @@
                 errEl.textContent = '';
             }
             if (work) work.style.display = 'inline';
+            const stopPipeline = startPipeline('pipelineStatusOptimize', 'apply');
             try {
                 const payload = {
                     itinerary_bundle: itineraryBundle,
@@ -632,6 +710,7 @@
                     errEl.style.display = 'block';
                 }
             } finally {
+                stopPipeline();
                 if (work) work.style.display = 'none';
             }
         }
@@ -751,6 +830,7 @@
                 btn.disabled = true;
             }
             if (work) work.style.display = 'inline';
+            const stopPipeline = startPipeline('pipelineStatusOptimize', 'optimize');
             try {
                 const payload = {
                     user_request: text,
@@ -787,6 +867,7 @@
                     errEl.style.display = 'block';
                 }
             } finally {
+                stopPipeline();
                 if (work) work.style.display = 'none';
                 updateOptimizeControls();
             }
@@ -877,6 +958,22 @@
             }
         }
 
+        function updateDemoToolsVisibility() {
+            const section = document.getElementById('demoToolsSection');
+            if (!section) return;
+            const hasItin = !!(itineraryBundle && itineraryBundle.days && itineraryBundle.days.length > 0);
+            section.style.display = hasItin ? 'block' : 'none';
+        }
+
+        function showEventNotification(text) {
+            const el = document.getElementById('eventNotification');
+            const txt = document.getElementById('eventNotificationText');
+            if (!el || !txt) return;
+            txt.textContent = text;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 8000);
+        }
+
         function renderItinerary(raw) {
             itinBody.innerHTML = '';
             itineraryBundle = null;
@@ -885,6 +982,7 @@
                 itineraryBundle = raw;
                 days = raw.days;
             }
+            updateDemoToolsVisibility();
             if (!days.length) {
                 itinTable.style.display = 'none';
                 itinEmpty.style.display = 'block';
@@ -896,22 +994,23 @@
             }
             itinEmpty.style.display = 'none';
             itinTable.style.display = 'table';
-            // const pp = document.getElementById('pricingPanels');
-            // if (pp) {
-            //     const fx = referenceFxHtml(raw);
-            //     const trp = tripPricingRollupHtml(raw);
-            //     const est = tripEstimatedRollupHtml(raw);
-            //     const refreshBlock = '<div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnRefreshPricing">Refresh pricing</button><span class="small text-danger" id="pricingRefreshError" style="display:none;"></span></div>';
-            //     const showPricing = fx || trp || est || lastSavedItineraryId;
-            //     if (showPricing) {
-            //         pp.style.display = 'block';
-            //         pp.innerHTML = fx + trp + est + refreshBlock;
-            //         wireRefreshPricingButton();
-            //     } else {
-            //         pp.style.display = 'none';
-            //         pp.innerHTML = '';
-            //     }
-            // }
+            const pp = document.getElementById('pricingPanels');
+            if (pp) {
+                const fx = referenceFxHtml(raw);
+                const trp = tripPricingRollupHtml(raw);
+                const est = tripEstimatedRollupHtml(raw);
+                const refreshBlock = '<div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnRefreshPricing">Refresh pricing</button><span class="small text-danger" id="pricingRefreshError" style="display:none;"></span></div>';
+                const showPricing = fx || trp || est || lastSavedItineraryId;
+                if (showPricing) {
+                    pp.style.display = 'block';
+                    pp.innerHTML = est + refreshBlock;
+                    // pp.innerHTML = fx + trp + est + refreshBlock;
+                    wireRefreshPricingButton();
+                } else {
+                    pp.style.display = 'none';
+                    pp.innerHTML = '';
+                }
+            }
             days.forEach((day, idx) => {
                 const tr = document.createElement('tr');
                 tr.className = 'itin-row';
@@ -1212,44 +1311,54 @@
                 payload.saved_itinerary_id = lastSavedItineraryId;
             }
 
-            const res = await fetch('/conversation/message', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                if (res.status === 404) {
-                    appendChat('assistant', 'That saved trip was not found.');
-                } else {
-                    appendChat('assistant', 'Something went wrong. Please try again.');
+            const btnSend = document.getElementById('btnSend');
+            const stopPipeline = startPipeline('pipelineStatus', 'chat');
+            if (btnSend) btnSend.disabled = true;
+            msgInput.disabled = true;
+            try {
+                const res = await fetch('/conversation/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        appendChat('assistant', 'That saved trip was not found.');
+                    } else {
+                        appendChat('assistant', 'Something went wrong. Please try again.');
+                    }
+                    return;
                 }
-                return;
-            }
 
-            if (data.preference_scope) preferenceScope = data.preference_scope;
+                if (data.preference_scope) preferenceScope = data.preference_scope;
 
-            if (data.status === 'need_more') {
-                appendChat('assistant', data.question || 'Could you add a bit more detail?');
-                renderChips(data.partial_persona || {}, preferenceScope);
-            } else if (data.status === 'generated') {
-                const bundle = data.current_itinerary;
-                if (data.replan_from_saved) {
-                    viewingSavedSnapshot = true;
-                    setSavedBanner(true);
-                } else {
-                    viewingSavedSnapshot = false;
-                    setSavedBanner(false);
+                if (data.status === 'need_more') {
+                    appendChat('assistant', data.question || 'Could you add a bit more detail?');
+                    renderChips(data.partial_persona || {}, preferenceScope);
+                } else if (data.status === 'generated') {
+                    const bundle = data.current_itinerary;
+                    if (data.replan_from_saved) {
+                        viewingSavedSnapshot = true;
+                        setSavedBanner(true);
+                    } else {
+                        viewingSavedSnapshot = false;
+                        setSavedBanner(false);
+                    }
+                    renderChips(data.partial_persona || data.persona || {}, preferenceScope);
+                    renderItinerary(bundle);
+                    lastSavedItineraryId = data.saved_itinerary_id || null;
+                    updatePdfDownloadButton();
+                    const n = (bundle && bundle.days) ? bundle.days.length : 0;
+                    if (n) {
+                        appendChat('assistant', 'Your ' + n + '-day itinerary is ready — click a day row for full detail.');
+                    }
+                    loadMyTrips();
                 }
-                renderChips(data.partial_persona || data.persona || {}, preferenceScope);
-                renderItinerary(bundle);
-                lastSavedItineraryId = data.saved_itinerary_id || null;
-                updatePdfDownloadButton();
-                const n = (bundle && bundle.days) ? bundle.days.length : 0;
-                if (n) {
-                    appendChat('assistant', 'Your ' + n + '-day itinerary is ready — click a day row for full detail.');
-                }
-                loadMyTrips();
+            } finally {
+                stopPipeline();
+                if (btnSend) btnSend.disabled = false;
+                msgInput.disabled = false;
             }
         }
 
@@ -1379,21 +1488,55 @@
             btnOptimize.addEventListener('click', runOptimization);
         }
 
+        async function postSimulateEvent(eventType, payload) {
+            const body = { event_type: eventType, payload: payload || {} };
+            if (itineraryBundle && itineraryBundle.itinerary_version === 2 && Array.isArray(itineraryBundle.days) && itineraryBundle.days.length) {
+                body.itinerary_bundle = itineraryBundle;
+            }
+            if (cachedPersonaPartial && typeof cachedPersonaPartial === 'object' && Object.keys(cachedPersonaPartial).length) {
+                body.persona = cachedPersonaPartial;
+            }
+            const res = await fetch('/event/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const detail = data.detail != null ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) : 'Event simulation failed.';
+                showEventNotification(detail);
+                return;
+            }
+            if (data.status === 'updated' && data.current_itinerary) {
+                itineraryBundle = data.current_itinerary;
+                renderItinerary(data.current_itinerary);
+                const changes = data.changes_applied;
+                let msg = 'Plan updated.';
+                if (Array.isArray(changes) && changes.length) {
+                    msg = 'Plan updated: ' + changes.map(function (c) { return String(c); }).join(' ');
+                }
+                showEventNotification(msg);
+                if (!viewingSavedSnapshot) {
+                    refreshState();
+                }
+            } else if (data.status === 'ignored' && data.reason === 'itinerary_empty') {
+                showEventNotification('No itinerary in session. Generate a plan or open a saved trip so the trip appears here, then try again.');
+            } else if (data.status === 'error' && data.reason === 'replanner_returned_empty') {
+                showEventNotification('Could not update the plan — replanner returned an empty itinerary.');
+            } else {
+                showEventNotification('No changes applied.');
+            }
+        }
+
         document.getElementById('btnRain').addEventListener('click', async () => {
-            await fetch('/event/simulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ event_type: 'rain', payload: { condition: 'rain' } })
-            });
-            refreshState();
+            await postSimulateEvent('rain', { condition: 'rain' });
         });
-        document.getElementById('btnEdit').addEventListener('click', async () => {
-            await fetch('/event/simulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ event_type: 'user_edit', payload: { time_shift_hours: 1 } })
+        document.getElementById('btnPlaceClosed').addEventListener('click', async () => {
+            await postSimulateEvent('place_closed', {
+                day_index: 0,
+                segment_index: 0,
+                reason: 'Day 1, Segment 1 is closed for maintenance'
             });
-            refreshState();
         });
 
         refreshState();

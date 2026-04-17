@@ -1,12 +1,17 @@
+import logging
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from agents.replanner_agent import ReplannerAgent
 from core.preference_schema import normalize_persona
 from events.event_bus import EventType, emit_event, get_events
+from core.itinerary_schema import itinerary_has_content
 from runtime.orchestrator import Orchestrator
 from services.pricing_service import enrich_itinerary_pricing
 from state.store import get_state, update_state
+
+logger = logging.getLogger(__name__)
+
 
 class ReactiveEngine:
     """
@@ -36,34 +41,75 @@ class ReactiveEngine:
             "persona": result.get("persona"),
         }
 
-    def trigger_event(self, event_type: EventType, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def trigger_event(
+        self,
+        event_type: EventType,
+        payload: Dict[str, Any],
+        *,
+        itinerary_bundle: Optional[Dict[str, Any]] = None,
+        persona_override: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Triggers the patch-based replanning process."""
-        # 1. Emit event
+        logger.debug("trigger_event: %s payload=%s", event_type, payload)
         emit_event(event_type, payload, source="ReactiveEngine")
-        
-        # 2. Fetch current state and itinerary
+
         state = get_state()
-        
-        # 3. Call replanner with current itinerary
+        base_itinerary: Optional[Dict[str, Any]] = None
+        if itinerary_bundle is not None and itinerary_has_content(itinerary_bundle):
+            base_itinerary = itinerary_bundle
+        elif itinerary_has_content(state.itinerary):
+            base_itinerary = state.itinerary
+
+        if base_itinerary is None:
+            logger.warning("trigger_event: no itinerary (session empty and no client bundle)")
+            return {
+                "status": "ignored",
+                "reason": "itinerary_empty",
+                "event_processed": False,
+            }
+
+        state_payload = dict(state.__dict__)
+        if persona_override:
+            state_payload["persona"] = {
+                **(state.persona or {}),
+                **persona_override,
+            }
+
         replanning_result = self.replanner.execute(
-            {"itinerary": state.itinerary}, 
-            state.__dict__
+            {"itinerary": base_itinerary},
+            state_payload,
         )
-        
-        # 4. Patch state
+
         new_itinerary = replanning_result["updated_itinerary"]
-        persona = normalize_persona(state.persona or {})
-        enrich_itinerary_pricing(
-            new_itinerary, persona, run_price_agent=True, force_price_agent=True
+        logger.debug(
+            "replanner returned itinerary has_content=%s",
+            itinerary_has_content(new_itinerary),
         )
-        update_state({"itinerary": new_itinerary})
-        
-        # 5. Return JSON update
+
+        if itinerary_has_content(new_itinerary):
+            persona = normalize_persona(state_payload.get("persona") or state.persona or {})
+            enrich_itinerary_pricing(
+                new_itinerary, persona, run_price_agent=True, force_price_agent=True
+            )
+            update_payload: Dict[str, Any] = {"itinerary": new_itinerary}
+            if persona_override and not (state.persona or {}):
+                update_payload["persona"] = normalize_persona(
+                    {**(state.persona or {}), **persona_override}
+                )
+            update_state(update_payload)
+
+            return {
+                "status": "updated",
+                "event_processed": True,
+                "current_itinerary": new_itinerary,
+                "changes_applied": replanning_result.get("changes", []),
+            }
+
+        logger.warning("replanner returned empty itinerary")
         return {
-            "status": "updated",
-            "event_processed": True,
-            "current_itinerary": new_itinerary,
-            "changes_applied": replanning_result.get("changes", [])
+            "status": "error",
+            "reason": "replanner_returned_empty",
+            "event_processed": False,
         }
 
     def reactive_loop(self):

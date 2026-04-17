@@ -72,8 +72,12 @@ class ConversationMessage(BaseModel):
     saved_itinerary_id: Optional[str] = None
 
 class EventInput(BaseModel):
+    """Simulate events; optional itinerary_bundle when session has no plan (e.g. saved trip in UI only)."""
+
     event_type: str
     payload: Dict[str, Any]
+    itinerary_bundle: Optional[Dict[str, Any]] = None
+    persona: Optional[Dict[str, Any]] = None
 
 
 class ItineraryReplaceBody(BaseModel):
@@ -283,10 +287,16 @@ async def simulate_event(input: EventInput):
         }
         
         etype = event_map.get(input.event_type.lower())
+        print("et--------ype", etype)
         if not etype:
             raise HTTPException(status_code=400, detail="Invalid event type")
             
-        return engine.trigger_event(etype, input.payload)
+        return engine.trigger_event(
+            etype,
+            input.payload,
+            itinerary_bundle=input.itinerary_bundle,
+            persona_override=input.persona,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
