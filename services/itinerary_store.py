@@ -147,6 +147,7 @@ def list_saved_itinerary_summaries() -> List[Dict[str, Any]]:
         conn.close()
 
     out: List[Dict[str, Any]] = []
+    print("rows-----------", rows)
     for row in rows:
         bid, created, dest, ts, te, bundle_raw = row
         title = _summary_title_from_bundle_json(bundle_raw, dest, ts, te)

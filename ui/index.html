@@ -51,6 +51,12 @@
         .msg { margin-bottom: 0.75rem; max-width: 95%; }
         .msg-user { margin-left: auto; background: var(--accent); color: #fff; padding: 0.5rem 0.85rem; border-radius: 0.75rem 0.75rem 0.25rem 0.75rem; }
         .msg-asst { margin-right: auto; background: #fff; border: 1px solid var(--border); padding: 0.5rem 0.85rem; border-radius: 0.75rem 0.75rem 0.75rem 0.25rem; }
+        .msg-asst.msg-asst-rich {
+            max-width: 100%;
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+        }
+        .msg-asst.msg-asst-rich .card { font-size: 0.8125rem; }
         .chip {
             display: inline-block;
             font-size: 0.75rem;
@@ -73,6 +79,24 @@
         tr.itin-row { cursor: pointer; }
         tr.itin-row:hover { background: #f8fafc !important; }
         .day-modal-seg { border-left: 3px solid var(--accent); padding-left: 0.75rem; margin-bottom: 1rem; }
+        .day-edit-readonly .form-control,
+        .day-edit-readonly .form-control:focus {
+            background-color: #f8fafc;
+            border-color: var(--border);
+            color: #0f172a;
+            cursor: default;
+            box-shadow: none;
+        }
+        .day-edit-readonly textarea.form-control {
+            resize: none;
+        }
+        .day-edit-readonly .form-label {
+            color: var(--text-muted);
+        }
+        .day-edit-readonly .day-seg-editor-card {
+            background: #fafbfc !important;
+            border-color: var(--border) !important;
+        }
         tr.saved-trip-row { cursor: pointer; }
         tr.saved-trip-row:hover { background: #f8fafc !important; }
         .saved-trip-pdf-btn { font-size: 0.75rem; padding: 0.15rem 0.45rem; }
@@ -86,18 +110,245 @@
             font-size: 0.72rem;
             margin-top: 0.15rem;
         }
+        .layout-split {
+            min-height: calc(100vh - 0px);
+        }
+        .left-agent-column {
+            position: sticky;
+            top: 0;
+            align-self: flex-start;
+            max-height: 100vh;
+            overflow-y: auto;
+            background: #fafbfc;
+        }
+        @media (min-width: 992px) {
+            .left-agent-column {
+                min-height: 100vh;
+            }
+        }
+        .left-agent-inner {
+            display: flex;
+            flex-direction: column;
+            min-height: min(100vh, 900px);
+        }
+        .left-agent-inner .chat-log {
+            flex: 1 1 auto;
+            min-height: 220px;
+            max-height: 550px;
+            height: auto;
+        }
+        .left-agent-brand {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .left-agent-brand .brand-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+            margin: 0;
+        }
+        .left-agent-brand .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin: 0.15rem 0 0;
+            line-height: 1.35;
+        }
+        .left-agent-compose .form-control {
+            font-size: 0.875rem;
+        }
+        .left-agent-compose .form-control::placeholder {
+            color: #94a3b8;
+        }
+        .left-agent-prefs {
+            padding-top: 0.75rem;
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+        }
+        .left-agent-prefs .prefs-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #94a3b8;
+            margin-bottom: 0.35rem;
+        }
+        #optimizePanel {
+            background: #f8fafc;
+            border: 1px solid var(--border) !important;
+            border-radius: 0.5rem;
+            padding: 0.75rem !important;
+            margin-top: 0.75rem !important;
+        }
+        #optimizePanel .optimize-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        #optimizePanel .optimize-panel-title {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #64748b;
+            margin: 0;
+        }
+        #optimizePanel details.optimize-help {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        #optimizePanel details.optimize-help summary {
+            cursor: pointer;
+            color: #64748b;
+            list-style: none;
+        }
+        #optimizePanel details.optimize-help summary::-webkit-details-marker { display: none; }
+        #optimizePanel details.optimize-help summary::before {
+            content: "▸ ";
+            display: inline-block;
+            transition: transform 0.15s ease;
+        }
+        #optimizePanel details.optimize-help[open] summary::before {
+            transform: rotate(90deg);
+        }
+        #optimizePanel details.optimize-help .help-body {
+            padding-top: 0.4rem;
+            line-height: 1.45;
+        }
+        .msg-opt-apply-wrap {
+            border-left: 3px solid var(--accent);
+            background: linear-gradient(165deg, #f8fafc 0%, #ffffff 55%);
+            padding: 0.75rem 0.85rem !important;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+        }
+        .opt-apply-chat-title {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #64748b;
+            margin-bottom: 0.35rem;
+        }
+        .opt-apply-chat-lead {
+            font-size: 0.8125rem;
+            color: #475569;
+            margin-bottom: 0.65rem;
+            line-height: 1.4;
+        }
+        .opt-venue-tile {
+            border: 1px solid var(--border);
+            border-radius: 0.45rem;
+            padding: 0.4rem 0.55rem;
+            margin-bottom: 0.35rem;
+            background: #fff;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .opt-venue-tile:hover {
+            border-color: #cbd5e1;
+            background: #fafbfc;
+        }
+        .opt-venue-tile .form-check {
+            margin-bottom: 0;
+            padding-left: 1.35rem;
+        }
+        .opt-venue-tile .form-check-input {
+            margin-top: 0.2rem;
+        }
+        .opt-target-chat-box {
+            border-radius: 0.45rem;
+            border: 1px dashed var(--border);
+            background: rgba(239, 246, 255, 0.6);
+            padding: 0.55rem 0.65rem;
+            margin-top: 0.5rem;
+        }
+        .opt-apply-actions {
+            margin-top: 0.65rem;
+            padding-top: 0.65rem;
+            border-top: 1px solid var(--border);
+        }
+        #optApplyInlineError {
+            font-size: 0.8125rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container py-4 py-md-5" style="max-width: 1280px;">
-        <div class="hero">
-            <h1 class="mb-2">Travel AI</h1>
-            <p>Describe where you want to go. We’ll confirm your preferences, then build a multi-day itinerary—one row per day; open a row for the full agent-grade detail.</p>
-        </div>
+    <div class="container-fluid px-0 layout-split">
+        <div class="row g-0">
+            <div class="col-12 col-lg-4 col-xl-3 border-end left-agent-column">
+                <div class="left-agent-inner panel p-3 p-lg-4 h-100 border-0 rounded-0">
+                    <header class="left-agent-brand">
+                        <p class="brand-title">Travel AI</p>
+                        <p class="brand-sub">One conversation — trip planning and place ideas.</p>
+                    </header>
 
-        <div class="row g-4 mb-2">
-            <div class="col-12">
-                <div class="panel p-4">
+                    <div id="chatLog" class="chat-log mb-2" aria-live="polite" aria-label="Conversation"></div>
+
+                    <div id="pipelineStatus" class="pipeline-status mb-2" style="display:none;" role="status" aria-live="polite">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
+                                <div class="text-muted pipeline-status-hint">Typical steps while agents run — timing varies.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pipelineStatusOptimize" class="pipeline-status mb-2" style="display:none;" role="status" aria-live="polite">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
+                                <div class="text-muted pipeline-status-hint">Finding place suggestions…</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="left-agent-compose d-flex flex-wrap gap-1 align-items-stretch mb-2">
+                        <input type="text" id="msgInput" class="form-control flex-grow-1" style="min-width:0;" placeholder="Trip details, answers, or place ideas…" autocomplete="off" aria-label="Message">
+                        <button type="button" class="btn btn-primary px-2 px-sm-3 flex-shrink-0" id="btnSend">Send</button>
+                        <button type="button" class="btn btn-outline-primary px-2 flex-shrink-0" id="btnOptimizeItinerary" disabled title="Get place or dining suggestions" style="display:none;">Suggestions</button>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <!-- <button type="button" class="btn btn-outline-secondary btn-sm" id="btnReset">New trip</button> -->
+                        <span id="optimizeWorking" class="small text-muted" style="display:none;">Working…</span>
+                    </div>
+
+                    <input type="hidden" id="optimizeRequestInput" value="">
+
+                    <div id="optimizePanel" class="flex-shrink-0 border-0" style="display:none;">
+                        <div class="optimize-panel-head">
+                            <p class="optimize-panel-title mb-0">Places &amp; apply</p>
+                            <button type="button" class="btn btn-link btn-sm text-secondary p-0 text-decoration-none" id="btnCloseOptimizePanel" title="Hide panel">Close</button>
+                        </div>
+                        <details class="optimize-help">
+                            <summary>How suggestions work</summary>
+                            <div class="help-body">
+                                Use the same field above for trip chat and for place ideas. When suggestions return, choose a venue <strong>in the chat</strong> to apply. Search uses your <strong>session</strong> destination.
+                            </div>
+                        </details>
+                        <p id="optimizeNoItinHint" class="small text-warning mb-2" style="display:none;">Generate an itinerary first to use this.</p>
+                    </div>
+
+                    <div class="left-agent-prefs">
+                        <div class="prefs-label">Preferences</div>
+                        <div id="prefChips"><span class="text-muted small">None yet.</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-8 col-xl-9 py-4 py-lg-5 px-3 px-lg-4" style="max-width: 100%;">
+                <div class="hero">
+                    <h1 class="mb-2">Travel AI</h1>
+                    <p>Describe where you want to go. We’ll confirm your preferences, then build a multi-day itinerary—one row per day; open a row for the full agent-grade detail.</p>
+                </div>
+
+                <div class="panel p-4 mb-4">
                     <h2 class="h5 fw-semibold mb-2">My trips</h2>
                     <p class="small text-muted mb-3">Saved automatically when a plan is generated. Opening a trip shows the <strong>stored snapshot</strong> (weather and prices as saved—not live refetched).</p>
                     <div id="savedTripBanner" class="alert alert-secondary border py-2 px-3 small mb-3" style="display:none;" role="status">
@@ -121,49 +372,16 @@
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="row g-4">
-            <div class="col-lg-7">
-                <div class="panel p-4 h-100">
-                    <h2 class="h5 fw-semibold mb-3">Your trip request</h2>
-                    <p class="small text-muted mb-3">Answer follow-up questions so the plan matches budget, pace, and style.</p>
-
-                    <div id="chatLog" class="chat-log mb-3" aria-live="polite"></div>
-
-                    <div id="pipelineStatus" class="pipeline-status mb-3" style="display:none;" role="status" aria-live="polite">
-                        <div class="d-flex align-items-start gap-2">
-                            <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
-                            <div class="flex-grow-1 min-w-0">
-                                <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
-                                <div class="text-muted pipeline-status-hint">Typical steps while agents run — timing varies.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="input-group mb-3">
-                        <input type="text" id="msgInput" class="form-control" placeholder="e.g. Weekend in Lisbon, cultural focus, moderate budget…" autocomplete="off">
-                        <button type="button" class="btn btn-primary px-3" id="btnSend">Send</button>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnReset">New trip</button>
-                    </div>
-
-                    <div class="mt-4">
-                        <div class="small text-muted text-uppercase fw-semibold mb-2" style="letter-spacing:0.06em;">Captured preferences</div>
-                        <div id="prefChips"><span class="text-muted small">None yet — send a message to begin.</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-5">
-                <div class="panel p-4 h-100">
+                <div class="panel p-4 mb-4">
                     <h2 class="h5 fw-semibold mb-1">Itinerary</h2>
                     <p class="small text-muted mb-2">One row per day. Click a row to open timing, places, meals, stay, and tips. Use <strong>My trips</strong> above to reopen a saved plan.</p>
-                    <div id="itinPdfDownloadWrap" class="mb-3" style="display:none;">
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnDownloadPdfItin" title="Download stored trip as PDF">Download PDF</button>
-                        <span class="small text-muted ms-2">Uses saved snapshot (same as export).</span>
+                    <div id="itinActionsBar" class="d-flex flex-wrap align-items-center gap-2 mb-3" style="display:none;">
+                        <div id="itinPdfDownloadWrap" style="display:none;">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnDownloadPdfItin" title="Download stored trip as PDF">Download PDF</button>
+                            <span class="small text-muted ms-2">Uses saved snapshot (same as export).</span>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnOpenOptimizePanel" style="display:none;">Places &amp; optimization</button>
                     </div>
 
                     <div id="itinWrap" class="table-responsive">
@@ -181,48 +399,19 @@
                         <div id="itinEmpty" class="empty-itin border rounded">No itinerary generated yet.</div>
                     </div>
                     <div id="pricingPanels" class="mt-3" style="display:none;"></div>
+                </div>
 
-                    <div class="demo-collapse mt-4 pt-3 border-top">
-                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#optimizeCollapse" aria-expanded="false" aria-controls="optimizeCollapse">
-                            Places &amp; optimization
-                        </button>
-                        <div class="collapse mt-2" id="optimizeCollapse">
-                            <p class="small text-muted mb-2">Ask for dining (food, lunch, cafe) <strong>or</strong> sights (museum, gallery, attraction). We return ranked recommendations (not direct edit commands), then you choose one to apply. After apply, estimates refresh automatically.</p>
-                            <p class="small text-muted mb-2">Uses your <strong>session</strong> destination for nearby search (not the saved-trip snapshot alone). Start a new chat if suggestions target the wrong city.</p>
-                            <p id="optimizeNoItinHint" class="small text-warning mb-2" style="display:none;">Generate an itinerary first to use this.</p>
-                            <div id="pipelineStatusOptimize" class="pipeline-status mb-2" style="display:none;" role="status" aria-live="polite">
-                                <div class="d-flex align-items-start gap-2">
-                                    <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
-                                    <div class="flex-grow-1 min-w-0">
-                                        <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
-                                        <div class="text-muted pipeline-status-hint">Typical steps while agents run — timing varies.</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <label for="optimizeRequestInput" class="form-label small mb-1">Your request</label>
-                            <textarea id="optimizeRequestInput" class="form-control form-control-sm mb-2" rows="2" placeholder="e.g. Dal Baati for lunch, or a modern art museum this afternoon…" disabled autocomplete="off"></textarea>
-                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="btnOptimizeItinerary" disabled>Get suggestions</button>
-                                <span id="optimizeWorking" class="small text-muted" style="display:none;">Working…</span>
-                            </div>
-                            <div id="optimizeError" class="text-danger small mb-2" style="display:none;"></div>
-                            <div id="optimizeResults" class="small"></div>
-                            <div id="optimizeActions" class="mt-3 border-top pt-3" style="display:none;"></div>
+                <div class="panel p-4" id="demoToolsSection" style="display:none;">
+                    <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#demoTools" aria-expanded="false">
+                        Demo tools (weather &amp; events)
+                    </button>
+                    <div class="collapse mt-2" id="demoTools">
+                        <p class="small text-muted mb-2">For internal demos: simulate reactive replanning.</p>
+                        <div id="eventNotification" class="alert alert-info py-2 small mb-3" style="display:none;" role="status">
+                            <strong>Background update:</strong> <span id="eventNotificationText"></span>
                         </div>
-                    </div>
-
-                    <div class="demo-collapse mt-4 pt-3 border-top" id="demoToolsSection" style="display:none;">
-                        <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#demoTools" aria-expanded="false">
-                            Demo tools (weather &amp; events)
-                        </button>
-                        <div class="collapse mt-2" id="demoTools">
-                            <p class="small text-muted mb-2">For internal demos: simulate reactive replanning.</p>
-                            <div id="eventNotification" class="alert alert-info py-2 small mb-3" style="display:none;" role="status">
-                                <strong>Background update:</strong> <span id="eventNotificationText"></span>
-                            </div>
-                            <button type="button" class="btn btn-warning btn-sm me-2" id="btnRain">Simulate rain</button>
-                            <button type="button" class="btn btn-danger btn-sm" id="btnPlaceClosed">Place is closed</button>
-                        </div>
+                        <button type="button" class="btn btn-warning btn-sm me-2" id="btnRain">Simulate rain</button>
+                        <button type="button" class="btn btn-danger btn-sm" id="btnPlaceClosed">Place is closed</button>
                     </div>
                 </div>
             </div>
@@ -305,15 +494,42 @@
             };
         }
 
-        function appendChat(role, text) {
+        function appendChat(role, text, opts) {
             const wrap = document.createElement('div');
             wrap.className = 'msg d-flex ' + (role === 'user' ? 'justify-content-end' : 'justify-content-start');
+            if (opts && opts.optimizeThread) {
+                wrap.setAttribute('data-opt-thread', '1');
+            }
             const inner = document.createElement('div');
             inner.className = role === 'user' ? 'msg-user' : 'msg-asst';
             inner.textContent = text;
             wrap.appendChild(inner);
             chatLog.appendChild(wrap);
             chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function appendChatAssistantHtml(html, opts) {
+            const wrap = document.createElement('div');
+            wrap.className = 'msg d-flex justify-content-start';
+            if (opts && opts.optimizeThread) {
+                wrap.setAttribute('data-opt-thread', '1');
+            }
+            const inner = document.createElement('div');
+            inner.className = 'msg-asst msg-asst-rich small';
+            inner.innerHTML = html;
+            wrap.appendChild(inner);
+            chatLog.appendChild(wrap);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function removeOptimizeThreadMessages() {
+            const chat = document.getElementById('chatLog');
+            if (!chat) return;
+            chat.querySelectorAll('.msg[data-opt-thread="1"]').forEach(function (row) {
+                if (row.parentNode) {
+                    row.parentNode.removeChild(row);
+                }
+            });
         }
 
         function renderChips(partial, scope) {
@@ -337,7 +553,7 @@
             const scopeLine = sc === 'trip_saved'
                 ? '<div class="small text-info mb-2 fw-semibold">This trip (saved)</div>'
                 : '<div class="small text-muted mb-2">New session</div>';
-            const inner = parts.length ? parts.join('') : '<span class="text-muted small">None yet — send a message to begin.</span>';
+            const inner = parts.length ? parts.join('') : '<span class="text-muted small">None yet.</span>';
             prefChips.innerHTML = scopeLine + inner;
         }
 
@@ -502,14 +718,18 @@
 
         function updateOptimizeControls() {
             const btn = document.getElementById('btnOptimizeItinerary');
-            const inp = document.getElementById('optimizeRequestInput');
             const hint = document.getElementById('optimizeNoItinHint');
+            const panel = document.getElementById('optimizePanel');
+            const panelOpen = !!(panel && panel.style.display === 'block');
             const hasItin = !!(itineraryBundle && itineraryBundle.itinerary_version === 2 && Array.isArray(itineraryBundle.days) && itineraryBundle.days.length > 0);
+            const btnSend = document.getElementById('btnSend');
+            if (btnSend) {
+                btnSend.style.display = '';
+            }
             if (btn) {
                 btn.disabled = !hasItin;
-            }
-            if (inp) {
-                inp.disabled = !hasItin;
+                const showSuggestions = hasItin && panelOpen;
+                btn.style.display = showSuggestions ? '' : 'none';
             }
             if (hint) {
                 hint.style.display = hasItin ? 'none' : 'block';
@@ -518,40 +738,72 @@
 
         function hideOptimizationApplyUI() {
             lastOptimizationSnapshot = null;
-            const wrap = document.getElementById('optimizeActions');
-            if (wrap) {
-                wrap.style.display = 'none';
-                wrap.innerHTML = '';
+            const chat = document.getElementById('chatLog');
+            if (!chat) return;
+            chat.querySelectorAll('[data-opt-apply="1"]').forEach(function (node) {
+                const row = node.closest('.msg');
+                if (row && row.parentNode) {
+                    row.parentNode.removeChild(row);
+                }
+            });
+        }
+
+        function clearOptApplyInlineError() {
+            const el = document.getElementById('optApplyInlineError');
+            if (el) {
+                el.textContent = '';
+                el.style.display = 'none';
+            }
+        }
+
+        function showOptApplyInlineError(msg) {
+            const el = document.getElementById('optApplyInlineError');
+            if (el) {
+                el.textContent = msg;
+                el.style.display = 'block';
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                appendChat('assistant', msg, { optimizeThread: true });
             }
         }
 
         function renderOptimizationApplyUI(data) {
             lastOptimizationSnapshot = data;
-            const wrap = document.getElementById('optimizeActions');
-            if (!wrap) return;
             const recs = data.recommendations;
             const cands = data.candidate_places;
             if (!Array.isArray(recs) || !recs.length || data.error) {
-                wrap.style.display = 'none';
-                wrap.innerHTML = '';
                 if (!data.error && (!recs || !recs.length)) {
                     lastOptimizationSnapshot = null;
                 }
                 return;
             }
             if (!Array.isArray(cands) || !cands.length) {
-                wrap.style.display = 'none';
-                wrap.innerHTML = '';
                 lastOptimizationSnapshot = null;
                 return;
             }
-            wrap.style.display = 'block';
-            let h = '<div class="fw-semibold small mb-2">Choose a venue, then apply to your plan</div>';
+
+            let h = '';
+            h += '<div class="opt-apply-chat-title">Apply to your plan</div>';
+            h += '<p class="opt-apply-chat-lead mb-0">Choose a venue, set the target segment if needed, then apply or dismiss.</p>';
+            h += '<div id="optApplyInlineError" class="alert alert-danger py-1 px-2 small mb-2" style="display:none;" role="alert"></div>';
             recs.forEach(function (r, i) {
                 const id = 'optRec' + i;
-                h += '<div class="form-check mb-1"><input class="form-check-input" type="radio" name="optimizeRec" id="' + id + '" value="' + i + '"><label class="form-check-label small" for="' + id + '">' + escapeHtml(String(r.name || ('Option ' + (i + 1)))) + '</label></div>';
+                h += '<div class="opt-venue-tile"><div class="form-check">';
+                h += '<input class="form-check-input" type="radio" name="optimizeRec" id="' + id + '" value="' + i + '">';
+                h += '<label class="form-check-label small w-100" for="' + id + '"><span class="fw-semibold d-block">' + escapeHtml(String(r.name || ('Option ' + (i + 1)))) + '</span>';
+                if (r.why) {
+                    h += '<span class="text-muted small">' + escapeHtml(String(r.why)) + '</span>';
+                }
+                const bits = [];
+                if (r.dish_confidence) bits.push('Dish match: ' + String(r.dish_confidence));
+                if (r.estimated_cost) bits.push('Est. cost: ' + String(r.estimated_cost));
+                if (r.travel_time) bits.push('Travel: ' + String(r.travel_time));
+                if (bits.length) {
+                    h += '<span class="d-block text-muted small mt-1">' + escapeHtml(bits.join(' · ')) + '</span>';
+                }
+                h += '</label></div></div>';
             });
-            h += '<div class="border rounded p-2 mt-2 mb-2 bg-light">';
+            h += '<div class="opt-target-chat-box">';
             h += '<div class="small fw-semibold mb-2">Target segment</div>';
             h += '<div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="optUseAutoTarget" checked><label class="form-check-label small" for="optUseAutoTarget">Use auto target (infer from query and timing)</label></div>';
             h += '<div class="row g-2">';
@@ -560,8 +812,20 @@
             h += '</div>';
             h += '<div class="small text-muted mt-2" id="optTargetHint">Auto-target will be used unless you uncheck it and choose Day/Segment.</div>';
             h += '</div>';
-            h += '<div class="d-flex flex-wrap gap-2 mt-2"><button type="button" class="btn btn-primary btn-sm" id="btnOptimizeApply">Apply selection</button><button type="button" class="btn btn-outline-secondary btn-sm" id="btnOptimizeCancel">Cancel</button></div>';
-            wrap.innerHTML = h;
+            h += '<div class="opt-apply-actions d-flex flex-wrap gap-2">';
+            h += '<button type="button" class="btn btn-primary btn-sm" id="btnOptimizeApply">Apply selection</button>';
+            h += '<button type="button" class="btn btn-outline-secondary btn-sm" id="btnOptimizeCancel">Dismiss</button>';
+            h += '</div>';
+
+            const row = document.createElement('div');
+            row.className = 'msg d-flex justify-content-start';
+            const inner = document.createElement('div');
+            inner.className = 'msg-asst msg-asst-rich msg-opt-apply-wrap';
+            inner.setAttribute('data-opt-apply', '1');
+            inner.innerHTML = h;
+            row.appendChild(inner);
+            chatLog.appendChild(row);
+            chatLog.scrollTop = chatLog.scrollHeight;
 
             const daySel = document.getElementById('optTargetDay');
             const segSel = document.getElementById('optTargetSegment');
@@ -621,36 +885,22 @@
             hideOptimizationApplyUI();
             const inp = document.getElementById('optimizeRequestInput');
             if (inp) inp.value = '';
-            const resEl = document.getElementById('optimizeResults');
-            if (resEl) resEl.innerHTML = '';
-            const errEl = document.getElementById('optimizeError');
-            if (errEl) {
-                errEl.style.display = 'none';
-                errEl.textContent = '';
-            }
         }
 
         async function applyOptimizationSelection() {
             const snap = lastOptimizationSnapshot;
-            const errEl = document.getElementById('optimizeError');
             const work = document.getElementById('optimizeWorking');
             if (!snap || !itineraryBundle) return;
             const sel = document.querySelector('input[name="optimizeRec"]:checked');
             if (!sel) {
-                if (errEl) {
-                    errEl.textContent = 'Select one of the suggestions above.';
-                    errEl.style.display = 'block';
-                }
+                showOptApplyInlineError('Select one of the venues above.');
                 return;
             }
             const idx = parseInt(sel.value, 10);
             const useAutoEl = document.getElementById('optUseAutoTarget');
             const daySel = document.getElementById('optTargetDay');
             const segSel = document.getElementById('optTargetSegment');
-            if (errEl) {
-                errEl.style.display = 'none';
-                errEl.textContent = '';
-            }
+            clearOptApplyInlineError();
             if (work) work.style.display = 'inline';
             const stopPipeline = startPipeline('pipelineStatusOptimize', 'apply');
             try {
@@ -682,33 +932,20 @@
                             msg = data.detail.errors.join('; ');
                         }
                     }
-                    if (errEl) {
-                        errEl.textContent = msg;
-                        errEl.style.display = 'block';
-                    }
+                    showOptApplyInlineError(msg);
                     return;
                 }
                 if (data.itinerary) {
                     hideOptimizationApplyUI();
                     const inpClear = document.getElementById('optimizeRequestInput');
                     if (inpClear) inpClear.value = '';
-                    const resEl = document.getElementById('optimizeResults');
-                    if (resEl) {
-                        resEl.innerHTML = '<div class="alert alert-success py-2 small mb-0" id="optimizeApplySuccess">Applied to your plan. Pricing estimates were refreshed.</div>';
-                        setTimeout(function () {
-                            const el = document.getElementById('optimizeApplySuccess');
-                            if (el && el.parentNode) el.parentNode.innerHTML = '';
-                        }, 6000);
-                    }
+                    appendChat('assistant', 'Applied to your plan. Pricing estimates were refreshed.');
                     itineraryBundle = data.itinerary;
                     renderItinerary(itineraryBundle);
                     loadMyTrips();
                 }
             } catch (e) {
-                if (errEl) {
-                    errEl.textContent = 'Could not apply selection.';
-                    errEl.style.display = 'block';
-                }
+                showOptApplyInlineError('Could not apply selection.');
             } finally {
                 stopPipeline();
                 if (work) work.style.display = 'none';
@@ -716,19 +953,21 @@
         }
 
         function renderOptimizationResult(data) {
-            const el = document.getElementById('optimizeResults');
-            if (!el) return;
             if (!data || typeof data !== 'object') {
-                el.innerHTML = '<p class="text-muted mb-0">No data.</p>';
+                appendChat('assistant', 'No suggestion data returned.', { optimizeThread: true });
                 hideOptimizationApplyUI();
                 return;
             }
             if (data.error) {
-                el.innerHTML = '<div class="alert alert-danger py-2 small mb-0">' + escapeHtml(String(data.error)) + '</div>';
+                appendChatAssistantHtml('<div class="alert alert-danger py-2 small mb-0">' + escapeHtml(String(data.error)) + '</div>', { optimizeThread: true });
                 hideOptimizationApplyUI();
                 return;
             }
-            let html = '';
+            const recs = data.recommendations;
+            const cands = data.candidate_places;
+            const showApply = Array.isArray(recs) && recs.length > 0
+                && Array.isArray(cands) && cands.length > 0;
+            let html = '<div class="small text-muted text-uppercase fw-semibold mb-2" style="letter-spacing:0.05em;font-size:0.65rem;">Suggestions</div>';
             if (data.warning_message) {
                 html += '<div class="alert alert-warning py-2 small">' + escapeHtml(String(data.warning_message)) + '</div>';
             }
@@ -759,25 +998,29 @@
                 html += '</div>';
             }
             if (data.meal_edit && data.meal_edit.flat_segment_index != null) {
-                html += '<p class="small text-muted mb-2">Auto-target suggestion: segment #' + escapeHtml(String(data.meal_edit.flat_segment_index)) + ' (adjust below if needed).</p>';
+                const tail = showApply
+                    ? ' (you can override in the apply card below.)'
+                    : ' (adjust below if needed).';
+                html += '<p class="small text-muted mb-2">Auto-target suggestion: segment #' + escapeHtml(String(data.meal_edit.flat_segment_index)) + tail + '</p>';
             }
-            const recs = data.recommendations;
             if (Array.isArray(recs) && recs.length) {
-                html += '<div class="fw-semibold mb-2">Top suggestions</div>';
-                recs.slice(0, 5).forEach(function (r, i) {
-                    html += '<div class="card card-body py-2 px-3 mb-2"><div class="fw-semibold">' + escapeHtml(String(r.name || ('Option ' + (i + 1)))) + '</div>';
-                    if (r.why) {
-                        html += '<p class="mb-1 small">' + escapeHtml(String(r.why)) + '</p>';
-                    }
-                    const bits = [];
-                    if (r.dish_confidence) bits.push('Dish match: ' + String(r.dish_confidence));
-                    if (r.estimated_cost) bits.push('Est. cost: ' + String(r.estimated_cost));
-                    if (r.travel_time) bits.push('Travel: ' + String(r.travel_time));
-                    if (bits.length) {
-                        html += '<p class="mb-0 text-muted small">' + escapeHtml(bits.join(' · ')) + '</p>';
-                    }
-                    html += '</div>';
-                });
+                if (!showApply) {
+                    html += '<div class="fw-semibold mb-2">Top suggestions</div>';
+                    recs.slice(0, 5).forEach(function (r, i) {
+                        html += '<div class="card card-body py-2 px-3 mb-2"><div class="fw-semibold">' + escapeHtml(String(r.name || ('Option ' + (i + 1)))) + '</div>';
+                        if (r.why) {
+                            html += '<p class="mb-1 small">' + escapeHtml(String(r.why)) + '</p>';
+                        }
+                        const bits = [];
+                        if (r.dish_confidence) bits.push('Dish match: ' + String(r.dish_confidence));
+                        if (r.estimated_cost) bits.push('Est. cost: ' + String(r.estimated_cost));
+                        if (r.travel_time) bits.push('Travel: ' + String(r.travel_time));
+                        if (bits.length) {
+                            html += '<p class="mb-0 text-muted small">' + escapeHtml(bits.join(' · ')) + '</p>';
+                        }
+                        html += '</div>';
+                    });
+                }
             } else if (!data.error) {
                 html += '<p class="text-muted mb-2">No ranked recommendations returned.</p>';
             }
@@ -801,31 +1044,27 @@
                     html += '<details class="mt-2"><summary class="small text-muted">Raw JSON</summary><pre class="small bg-light border rounded p-2 mt-1 mb-0" style="max-height:180px;overflow:auto;">' + escapeHtml(JSON.stringify(upd, null, 2)) + '</pre></details>';
                 }
             }
-            el.innerHTML = html || '<p class="text-muted mb-0">Done.</p>';
+            appendChatAssistantHtml(html || '<p class="text-muted mb-0">Done.</p>', { optimizeThread: true });
             renderOptimizationApplyUI(data);
         }
 
         async function runOptimization() {
-            const inp = document.getElementById('optimizeRequestInput');
+            const msgEl = document.getElementById('msgInput');
+            const hiddenOpt = document.getElementById('optimizeRequestInput');
             const btn = document.getElementById('btnOptimizeItinerary');
-            const errEl = document.getElementById('optimizeError');
             const work = document.getElementById('optimizeWorking');
-            const resEl = document.getElementById('optimizeResults');
-            const text = (inp && inp.value) ? inp.value.trim() : '';
+            const text = (msgEl && msgEl.value) ? msgEl.value.trim() : '';
+            if (hiddenOpt) hiddenOpt.value = text;
             if (!text) {
-                if (errEl) {
-                    errEl.textContent = 'Enter what you want recommendations for (e.g. lunch, cafe, museum).';
-                    errEl.style.display = 'block';
-                }
+                appendChat('assistant', 'Enter what you want suggestions for (e.g. lunch, cafe, museum) in the field above, then try again.', { optimizeThread: true });
+                if (msgEl) msgEl.focus();
                 return;
             }
             if (!itineraryBundle || !itineraryBundle.days || !itineraryBundle.days.length) return;
+            setOptimizePanelVisible(true);
             hideOptimizationApplyUI();
-            if (errEl) {
-                errEl.style.display = 'none';
-                errEl.textContent = '';
-            }
-            if (resEl) resEl.innerHTML = '';
+            appendChat('user', text, { optimizeThread: true });
+            if (msgEl) msgEl.value = '';
             if (btn) {
                 btn.disabled = true;
             }
@@ -854,18 +1093,12 @@
                             msg = data.detail.map(function (d) { return d.msg || JSON.stringify(d); }).join('; ');
                         }
                     }
-                    if (errEl) {
-                        errEl.textContent = msg;
-                        errEl.style.display = 'block';
-                    }
+                    appendChat('assistant', msg, { optimizeThread: true });
                     return;
                 }
                 renderOptimizationResult(data);
             } catch (e) {
-                if (errEl) {
-                    errEl.textContent = 'Could not reach the server.';
-                    errEl.style.display = 'block';
-                }
+                appendChat('assistant', 'Could not reach the server.', { optimizeThread: true });
             } finally {
                 stopPipeline();
                 if (work) work.style.display = 'none';
@@ -926,6 +1159,51 @@
             const w = document.getElementById('itinPdfDownloadWrap');
             if (!w) return;
             w.style.display = lastSavedItineraryId ? 'block' : 'none';
+        }
+
+        function updateItineraryActionsBar() {
+            const bar = document.getElementById('itinActionsBar');
+            const btnOpt = document.getElementById('btnOpenOptimizePanel');
+            const hasItin = !!(itineraryBundle && itineraryBundle.itinerary_version === 2 && Array.isArray(itineraryBundle.days) && itineraryBundle.days.length > 0);
+            if (bar) {
+                bar.style.display = (hasItin || lastSavedItineraryId) ? 'flex' : 'none';
+            }
+            if (btnOpt) {
+                btnOpt.style.display = hasItin ? 'inline-block' : 'none';
+            }
+            updatePdfDownloadButton();
+        }
+
+        function setOptimizePanelVisible(visible) {
+            const p = document.getElementById('optimizePanel');
+            if (!p) return;
+            p.style.display = visible ? 'block' : 'none';
+
+            if (!visible) {
+                hideOptimizationApplyUI();
+                removeOptimizeThreadMessages();
+                const psOpt = document.getElementById('pipelineStatusOptimize');
+                if (psOpt) psOpt.style.display = 'none';
+                const ow = document.getElementById('optimizeWorking');
+                if (ow) ow.style.display = 'none';
+                const hid = document.getElementById('optimizeRequestInput');
+                if (hid) hid.value = '';
+                const help = p.querySelector('details.optimize-help');
+                if (help) help.open = false;
+                const inp = document.getElementById('msgInput');
+                if (inp) {
+                    setTimeout(function () { inp.focus(); }, 0);
+                }
+            } else {
+                const inp = document.getElementById('msgInput');
+                if (inp) {
+                    setTimeout(function () {
+                        inp.focus();
+                        p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 0);
+                }
+            }
+            updateOptimizeControls();
         }
 
         async function downloadSavedPdf(savedId) {
@@ -989,7 +1267,9 @@
                 itinEmpty.textContent = 'No itinerary generated yet.';
                 const pp = document.getElementById('pricingPanels');
                 if (pp) { pp.style.display = 'none'; pp.innerHTML = ''; }
+                setOptimizePanelVisible(false);
                 updateOptimizeControls();
+                updateItineraryActionsBar();
                 return;
             }
             itinEmpty.style.display = 'none';
@@ -1028,6 +1308,7 @@
                 itinBody.appendChild(tr);
             });
             updateOptimizeControls();
+            updateItineraryActionsBar();
         }
 
         function newSegmentTemplate() {
@@ -1072,6 +1353,7 @@
             inp.setAttribute('data-field', field);
             inp.dataset.field = field;
             inp.value = value == null ? '' : String(value);
+            inp.readOnly = true;
             wrap.appendChild(lab);
             wrap.appendChild(inp);
             return wrap;
@@ -1243,6 +1525,7 @@
             dayDetailBody.innerHTML = '';
             const root = document.createElement('div');
             root.id = 'dayEditFormRoot';
+            root.className = 'day-edit-readonly';
             const titleLab = document.createElement('label');
             titleLab.className = 'form-label small';
             titleLab.setAttribute('for', 'dayEditTitle');
@@ -1251,6 +1534,7 @@
             titleInp.type = 'text';
             titleInp.className = 'form-control mb-3';
             titleInp.id = 'dayEditTitle';
+            titleInp.readOnly = true;
             titleInp.value = day.title != null ? String(day.title) : ('Day ' + dnum);
             root.appendChild(titleLab);
             root.appendChild(titleInp);
@@ -1261,6 +1545,7 @@
             sumTa.className = 'form-control mb-3';
             sumTa.id = 'dayEditSummary';
             sumTa.rows = 2;
+            sumTa.readOnly = true;
             sumTa.value = day.summary || '';
             root.appendChild(sumLab);
             root.appendChild(sumTa);
@@ -1348,7 +1633,7 @@
                     renderChips(data.partial_persona || data.persona || {}, preferenceScope);
                     renderItinerary(bundle);
                     lastSavedItineraryId = data.saved_itinerary_id || null;
-                    updatePdfDownloadButton();
+                    updateItineraryActionsBar();
                     const n = (bundle && bundle.days) ? bundle.days.length : 0;
                     if (n) {
                         appendChat('assistant', 'Your ' + n + '-day itinerary is ready — click a day row for full detail.');
@@ -1377,7 +1662,7 @@
             preferenceScope = 'session';
             cachedPersonaPartial = {};
             hideOptimizationApplyUI();
-            updatePdfDownloadButton();
+            setOptimizePanelVisible(false);
             await fetch('/conversation/reset', { method: 'POST' });
             chatLog.innerHTML = '';
             renderChips({}, 'session');
@@ -1463,7 +1748,6 @@
                 setSavedBanner(true);
                 lastSavedItineraryId = id;
                 preferenceScope = 'trip_saved';
-                updatePdfDownloadButton();
                 const bundle = data.itinerary_bundle;
                 const persona = data.persona_snapshot || {};
                 renderChips(persona, 'trip_saved');
@@ -1477,10 +1761,52 @@
         msgInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
         });
-        document.getElementById('btnReset').addEventListener('click', resetTrip);
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnReset = document.getElementById('btnReset');
+            if (btnReset) {
+                btnReset.addEventListener('click', resetTrip);
+            }
+            const btnSend = document.getElementById('btnSend');
+            const btnSuggestions = document.getElementById('btnOptimizeItinerary');
+            const btnOpen = document.getElementById('btnOpenOptimizePanel');
+            const btnClose = document.getElementById('btnCloseOptimizePanel');
+
+            // 1. When "Places & optimization" is clicked
+            if (btnOpen) {
+                btnOpen.addEventListener('click', () => {
+                    if (btnSend) btnSend.style.display = 'none';
+                    if (btnSuggestions) btnSuggestions.style.display = 'block';
+                });
+            }
+
+            // 2. When "Close" is clicked
+            if (btnClose) {
+                btnClose.addEventListener('click', () => {
+                    if (btnSuggestions) btnSuggestions.style.display = 'none';
+                    if (btnSend) btnSend.style.display = 'block';
+                });
+            }
+            updateOptimizeControls();
+        });
         const btnPdfItin = document.getElementById('btnDownloadPdfItin');
         if (btnPdfItin) {
             btnPdfItin.addEventListener('click', () => downloadSavedPdf(lastSavedItineraryId));
+        }
+
+        const btnOpenOptimizePanel = document.getElementById('btnOpenOptimizePanel');
+        if (btnOpenOptimizePanel) {
+            btnOpenOptimizePanel.addEventListener('click', function () {
+                const p = document.getElementById('optimizePanel');
+                if (!p) return;
+                const showing = p.style.display === 'block';
+                setOptimizePanelVisible(!showing);
+            });
+        }
+        const btnCloseOptimizePanel = document.getElementById('btnCloseOptimizePanel');
+        if (btnCloseOptimizePanel) {
+            btnCloseOptimizePanel.addEventListener('click', function () {
+                setOptimizePanelVisible(false);
+            });
         }
 
         const btnOptimize = document.getElementById('btnOptimizeItinerary');
