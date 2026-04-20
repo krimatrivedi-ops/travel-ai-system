@@ -18,6 +18,8 @@ REQUIRED_FIELDS: Tuple[str, ...] = (
     "walking_tolerance",
     "pace",
     "budget_sensitivity",
+    "trip_start_date",
+    "trip_end_date",
 )
 
 TRAVEL_STYLES = frozenset({"luxury", "adventure", "cultural", "balanced"})
@@ -34,6 +36,8 @@ FIELD_PROMPTS: Dict[str, str] = {
     "walking_tolerance": "How much walking are you comfortable with: low, medium, or high?",
     "pace": "Preferred pace: relaxed, moderate, or intensive?",
     "budget_sensitivity": "Budget sensitivity: low (splurge okay), medium, or high (budget-conscious)?",
+    "trip_start_date": "When does your trip start? (YYYY-MM-DD)",
+    "trip_end_date": "When does your trip end? (YYYY-MM-DD)",
 }
 
 

@@ -27,6 +27,8 @@ Required persona fields (all must be present before you set complete=true):
 - walking_tolerance: exactly one of: low, medium, high
 - pace: exactly one of: relaxed, moderate, intensive
 - budget_sensitivity: exactly one of: low, medium, high
+- trip_start_date: string, YYYY-MM-DD
+- trip_end_date: string, YYYY-MM-DD
 
 Optional: party_size (integer), accessibility_notes (string)
 
@@ -198,5 +200,8 @@ def _apply_direct_answer(merged: Dict[str, Any], last_user: str) -> Dict[str, An
         return merged
     if miss == "trip_duration" and len(t) < 80:
         merged["trip_duration"] = t
+        return merged
+    if (miss == "trip_start_date" or miss == "trip_end_date") and re.match(r"\d{4}-\d{2}-\d{2}", t):
+        merged[miss] = t
         return merged
     return merged

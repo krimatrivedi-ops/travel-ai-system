@@ -29,9 +29,15 @@ from services.itinerary_store import (
     save_generated_itinerary,
     update_saved_itinerary_after_replan,
     update_saved_itinerary_bundle,
+    list_notifications,
+    mark_notification_as_read,
+    save_notification,
 )
-from services.pdf_export import build_itinerary_pdf_bytes, pdf_attachment_filename
+from services.youtube_service import extract_video_id, get_transcript
+from agents.youtube_itinerary_agent import YouTubeItineraryAgent
+from agents.personalization_agent import PersonalizationAgent
 from routes.pricing import router as pricing_router
+from services.pdf_export import build_itinerary_pdf_bytes, pdf_attachment_filename
 from utils.util import clean_cost, safe_float
 
 logger = logging.getLogger(__name__)
@@ -39,10 +45,30 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Travel AI System API")
 app.include_router(pricing_router)
 
-# Initialize engine
+# Initialize agents
 engine = ReactiveEngine(Orchestrator(), ReplannerAgent())
 optimization_agent = OptimizationAgent()
 decision_agent = DecisionAgent()
+youtube_agent = YouTubeItineraryAgent()
+personalization_agent = PersonalizationAgent()
+
+class YouTubeImportInput(BaseModel):
+    url: str
+    persona: Optional[Dict[str, Any]] = None
+
+
+class PersonalizeAnalyzeInput(BaseModel):
+    itinerary_bundle: Optional[Dict[str, Any]] = None
+    persona: Optional[Dict[str, Any]] = None
+    saved_itinerary_id: Optional[str] = None
+
+
+class PersonalizeApplyInput(BaseModel):
+    itinerary_bundle: Dict[str, Any]
+    gap_id: str
+    option_value: str
+    persona: Optional[Dict[str, Any]] = None
+    saved_itinerary_id: Optional[str] = None
 
 
 def persona_for_pricing(saved_itinerary_id: Optional[str] = None) -> Dict[str, Any]:
@@ -531,6 +557,53 @@ async def get_saved(saved_id: str):
     return row
 
 
+@app.get("/notifications")
+async def get_notifications():
+    """Returns all notifications."""
+    return list_notifications()
+
+@app.post("/notifications/{notification_id}/read")
+async def read_notification(notification_id: str):
+    """Mark a notification as read."""
+    mark_notification_as_read(notification_id)
+    return {"ok": True}
+
+@app.post("/import/youtube")
+async def import_youtube(input: YouTubeImportInput):
+    """Import an itinerary from a YouTube URL."""
+    video_id = extract_video_id(input.url)
+    if not video_id:
+        raise HTTPException(status_code=400, detail="Invalid YouTube URL")
+    
+    try:
+        transcript = get_transcript(video_id)
+        result = youtube_agent.execute({"transcript": transcript, "persona": input.persona or {}}, {})
+        
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        
+        itin = result["itinerary"]
+        persona = input.persona or {}
+        persona["destination"] = result.get("destination", persona.get("destination", "Imported trip"))
+        
+        saved_id = save_generated_itinerary(persona, itin)
+        
+        save_notification(
+            "youtube_import", 
+            f"YouTube itinerary for {persona['destination']} is ready!",
+            {"saved_itinerary_id": saved_id}
+        )
+        
+        return {
+            "status": "generated",
+            "current_itinerary": itin,
+            "persona": persona,
+            "saved_itinerary_id": saved_id
+        }
+    except Exception as e:
+        logger.exception("YouTube import failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/itinerary")
 async def get_itinerary():
     """Returns the latest itinerary and conversation status."""
@@ -540,3 +613,71 @@ async def get_itinerary():
         "conversation_phase": st.conversation_phase,
         "pending_question": st.pending_question,
     }
+
+
+@app.post("/itinerary/personalize/analyze")
+async def personalize_analyze(body: PersonalizeAnalyzeInput):
+    """Analyze itinerary for gaps and return button-based options."""
+    try:
+        state = get_state()
+        bundle = body.itinerary_bundle or state.itinerary
+        if not itinerary_has_content(bundle):
+            raise HTTPException(status_code=400, detail="No itinerary content to personalize")
+
+        persona = body.persona or persona_for_pricing(body.saved_itinerary_id)
+        
+        result = personalization_agent.execute(
+            {
+                "mode": "analyze",
+                "itinerary": bundle,
+                "persona": persona,
+            },
+            state.__dict__,
+        )
+        return result
+    except Exception as e:
+        logger.exception("Personalization analysis failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/itinerary/personalize/apply")
+async def personalize_apply(body: PersonalizeApplyInput):
+    """Apply a selected personalization option to the itinerary."""
+    try:
+        state = get_state()
+        persona = body.persona or persona_for_pricing(body.saved_itinerary_id)
+        
+        result = personalization_agent.execute(
+            {
+                "mode": "apply",
+                "itinerary": body.itinerary_bundle,
+                "persona": persona,
+                "gap_id": body.gap_id,
+                "option_value": body.option_value,
+            },
+            state.__dict__,
+        )
+        
+        updated_itin = result.get("itinerary")
+        updated_persona = result.get("persona")
+        
+        if not updated_itin:
+            raise HTTPException(status_code=500, detail="Failed to update itinerary")
+
+        # Re-enrich pricing after modification
+        enrich_itinerary_pricing(
+            updated_itin,
+            updated_persona or persona,
+            run_price_agent=True,
+            force_price_agent=True,
+        )
+
+        update_state({"itinerary": updated_itin, "persona": updated_persona or persona})
+        sid = (body.saved_itinerary_id or "").strip()
+        if sid:
+            update_saved_itinerary_after_replan(sid, updated_persona or persona, updated_itin)
+            
+        return {"ok": True, "itinerary": updated_itin, "persona": updated_persona or persona}
+    except Exception as e:
+        logger.exception("Personalization apply failed")
+        raise HTTPException(status_code=500, detail=str(e))

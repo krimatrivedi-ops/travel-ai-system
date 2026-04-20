@@ -3,1871 +3,908 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel AI — Trip planner</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Travel AI — Trip Planner</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --bg: #f4f6f9;
-            --card: #ffffff;
-            --accent: #2563eb;
-            --accent-soft: #eff6ff;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-        }
         body {
             font-family: "DM Sans", system-ui, sans-serif;
-            background: var(--bg);
-            color: #0f172a;
-            min-height: 100vh;
+            background: #f8fafc;
         }
-        .hero {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 55%, #3b82f6 100%);
-            color: #fff;
-            border-radius: 1rem;
-            padding: 2rem 2.25rem;
-            margin-bottom: 1.75rem;
-            box-shadow: 0 12px 40px rgba(37, 99, 235, 0.25);
-        }
-        .hero h1 { font-weight: 700; letter-spacing: -0.02em; font-size: 1.75rem; }
-        .hero p { opacity: 0.92; margin-bottom: 0; max-width: 42rem; }
-        .panel {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        .sidebar-link.active {
+            background-color: #1e293b;
+            border-left: 4px solid #3b82f6;
         }
         .chat-log {
-            min-height: 360px;
-            height: min(52vh, 560px);
+            height: calc(100vh - 200px);
             overflow-y: auto;
-            padding: 1rem;
-            background: #fafbfc;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border);
         }
-        .msg { margin-bottom: 0.75rem; max-width: 95%; }
-        .msg-user { margin-left: auto; background: var(--accent); color: #fff; padding: 0.5rem 0.85rem; border-radius: 0.75rem 0.75rem 0.25rem 0.75rem; }
-        .msg-asst { margin-right: auto; background: #fff; border: 1px solid var(--border); padding: 0.5rem 0.85rem; border-radius: 0.75rem 0.75rem 0.75rem 0.25rem; }
-        .msg-asst.msg-asst-rich {
-            max-width: 100%;
-            width: 100%;
-            padding: 0.65rem 0.85rem;
+        .msg-user {
+            background-color: #2563eb;
+            color: white;
+            border-radius: 1rem 1rem 0 1rem;
         }
-        .msg-asst.msg-asst-rich .card { font-size: 0.8125rem; }
+        .msg-asst {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem 1rem 1rem 0;
+        }
+        .itinerary-scroll {
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
         .chip {
-            display: inline-block;
             font-size: 0.75rem;
-            padding: 0.2rem 0.55rem;
-            border-radius: 999px;
-            background: var(--accent-soft);
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            background-color: #eff6ff;
             color: #1e40af;
-            margin: 0.15rem 0.25rem 0.15rem 0;
             border: 1px solid #bfdbfe;
         }
-        .table-itin th { font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
-        .empty-itin {
-            text-align: center;
-            padding: 2.5rem 1rem;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-        .demo-collapse .btn-link { color: var(--text-muted); font-size: 0.85rem; text-decoration: none; }
-        .demo-collapse .btn-link:hover { color: var(--accent); }
-        tr.itin-row { cursor: pointer; }
-        tr.itin-row:hover { background: #f8fafc !important; }
-        .day-modal-seg { border-left: 3px solid var(--accent); padding-left: 0.75rem; margin-bottom: 1rem; }
-        .day-edit-readonly .form-control,
-        .day-edit-readonly .form-control:focus {
-            background-color: #f8fafc;
-            border-color: var(--border);
-            color: #0f172a;
-            cursor: default;
-            box-shadow: none;
-        }
-        .day-edit-readonly textarea.form-control {
-            resize: none;
-        }
-        .day-edit-readonly .form-label {
-            color: var(--text-muted);
-        }
-        .day-edit-readonly .day-seg-editor-card {
-            background: #fafbfc !important;
-            border-color: var(--border) !important;
-        }
-        tr.saved-trip-row { cursor: pointer; }
-        tr.saved-trip-row:hover { background: #f8fafc !important; }
-        .saved-trip-pdf-btn { font-size: 0.75rem; padding: 0.15rem 0.45rem; }
-        .pipeline-status {
-            padding: 0.65rem 0.85rem;
-            background: var(--accent-soft);
-            border: 1px solid #bfdbfe;
-            border-radius: 0.5rem;
-        }
-        .pipeline-status .pipeline-status-hint {
-            font-size: 0.72rem;
-            margin-top: 0.15rem;
-        }
-        .layout-split {
-            min-height: calc(100vh - 0px);
-        }
-        .left-agent-column {
-            position: sticky;
-            top: 0;
-            align-self: flex-start;
-            max-height: 100vh;
-            overflow-y: auto;
-            background: #fafbfc;
-        }
-        @media (min-width: 992px) {
-            .left-agent-column {
-                min-height: 100vh;
-            }
-        }
-        .left-agent-inner {
-            display: flex;
-            flex-direction: column;
-            min-height: min(100vh, 900px);
-        }
-        .left-agent-inner .chat-log {
-            flex: 1 1 auto;
-            min-height: 220px;
-            max-height: 550px;
-            height: auto;
-        }
-        .left-agent-brand {
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.75rem;
-            margin-bottom: 0.75rem;
-        }
-        .left-agent-brand .brand-title {
-            font-size: 0.9375rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            color: #0f172a;
-            margin: 0;
-        }
-        .left-agent-brand .brand-sub {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin: 0.15rem 0 0;
-            line-height: 1.35;
-        }
-        .left-agent-compose .form-control {
-            font-size: 0.875rem;
-        }
-        .left-agent-compose .form-control::placeholder {
-            color: #94a3b8;
-        }
-        .left-agent-prefs {
-            padding-top: 0.75rem;
-            margin-top: auto;
-            border-top: 1px solid var(--border);
-        }
-        .left-agent-prefs .prefs-label {
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: #94a3b8;
-            margin-bottom: 0.35rem;
-        }
-        #optimizePanel {
-            background: #f8fafc;
-            border: 1px solid var(--border) !important;
-            border-radius: 0.5rem;
-            padding: 0.75rem !important;
-            margin-top: 0.75rem !important;
-        }
-        #optimizePanel .optimize-panel-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        #optimizePanel .optimize-panel-title {
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: #64748b;
-            margin: 0;
-        }
-        #optimizePanel details.optimize-help {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-        #optimizePanel details.optimize-help summary {
-            cursor: pointer;
-            color: #64748b;
-            list-style: none;
-        }
-        #optimizePanel details.optimize-help summary::-webkit-details-marker { display: none; }
-        #optimizePanel details.optimize-help summary::before {
-            content: "▸ ";
-            display: inline-block;
-            transition: transform 0.15s ease;
-        }
-        #optimizePanel details.optimize-help[open] summary::before {
-            transform: rotate(90deg);
-        }
-        #optimizePanel details.optimize-help .help-body {
-            padding-top: 0.4rem;
-            line-height: 1.45;
-        }
-        .msg-opt-apply-wrap {
-            border-left: 3px solid var(--accent);
-            background: linear-gradient(165deg, #f8fafc 0%, #ffffff 55%);
-            padding: 0.75rem 0.85rem !important;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
-        }
-        .opt-apply-chat-title {
-            font-size: 0.6875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: #64748b;
-            margin-bottom: 0.35rem;
-        }
-        .opt-apply-chat-lead {
-            font-size: 0.8125rem;
-            color: #475569;
-            margin-bottom: 0.65rem;
-            line-height: 1.4;
-        }
-        .opt-venue-tile {
-            border: 1px solid var(--border);
-            border-radius: 0.45rem;
-            padding: 0.4rem 0.55rem;
-            margin-bottom: 0.35rem;
-            background: #fff;
-            transition: border-color 0.15s ease, background 0.15s ease;
-        }
-        .opt-venue-tile:hover {
-            border-color: #cbd5e1;
-            background: #fafbfc;
-        }
-        .opt-venue-tile .form-check {
-            margin-bottom: 0;
-            padding-left: 1.35rem;
-        }
-        .opt-venue-tile .form-check-input {
-            margin-top: 0.2rem;
-        }
-        .opt-target-chat-box {
-            border-radius: 0.45rem;
-            border: 1px dashed var(--border);
-            background: rgba(239, 246, 255, 0.6);
-            padding: 0.55rem 0.65rem;
-            margin-top: 0.5rem;
-        }
-        .opt-apply-actions {
-            margin-top: 0.65rem;
-            padding-top: 0.65rem;
-            border-top: 1px solid var(--border);
-        }
-        #optApplyInlineError {
-            font-size: 0.8125rem;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .completed-gap {
+            opacity: 0.7;
+            border-left: 4px solid #10b981;
+            background-color: #f0fdf4;
         }
     </style>
 </head>
-<body>
-    <div class="container-fluid px-0 layout-split">
-        <div class="row g-0">
-            <div class="col-12 col-lg-4 col-xl-3 border-end left-agent-column">
-                <div class="left-agent-inner panel p-3 p-lg-4 h-100 border-0 rounded-0">
-                    <header class="left-agent-brand">
-                        <p class="brand-title">Travel AI</p>
-                        <p class="brand-sub">One conversation — trip planning and place ideas.</p>
-                    </header>
+<body class="h-screen flex overflow-hidden">
 
-                    <div id="chatLog" class="chat-log mb-2" aria-live="polite" aria-label="Conversation"></div>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                <i data-lucide="plane"></i>
+            </div>
+            <span class="text-xl font-bold text-white tracking-tight">Travel AI</span>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-1 mt-4">
+            <a href="#" onclick="switchView('home')" id="nav-home" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white">
+                <i data-lucide="message-square" class="w-5 h-5"></i>
+                <span>Plan Trip</span>
+            </a>
+            <a href="#" onclick="switchView('trips')" id="nav-trips" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white">
+                <i data-lucide="map" class="w-5 h-5"></i>
+                <span>My Trips</span>
+            </a>
+            <a href="#" onclick="switchView('youtube')" id="nav-youtube" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white">
+                <i data-lucide="youtube" class="w-5 h-5"></i>
+                <span>Import from YouTube</span>
+            </a>
+            <a href="#" onclick="switchView('notifications')" id="nav-notifications" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white relative">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+                <span>Notifications</span>
+                <span id="unread-count" class="hidden absolute right-4 top-3.5 w-2 h-2 bg-red-500 rounded-full"></span>
+            </a>
+        </nav>
 
-                    <div id="pipelineStatus" class="pipeline-status mb-2" style="display:none;" role="status" aria-live="polite">
-                        <div class="d-flex align-items-start gap-2">
-                            <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
-                            <div class="flex-grow-1 min-w-0">
-                                <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
-                                <div class="text-muted pipeline-status-hint">Typical steps while agents run — timing varies.</div>
+        <div class="p-4 border-t border-slate-800">
+            <div id="prefChips" class="flex flex-wrap gap-1">
+                <span class="text-xs text-slate-500">No preferences set</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <!-- Top Bar -->
+        <header class="h-16 bg-white border-b flex items-center justify-between px-8 flex-shrink-0">
+            <h2 id="view-title" class="text-lg font-semibold text-slate-800">Plan a New Trip</h2>
+            <div class="flex items-center gap-4">
+                <button onclick="switchView('notifications')" class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                    <span id="unread-count-top" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic View Container -->
+        <main class="flex-1 overflow-hidden relative">
+            
+            <!-- Home View (Chat + Itinerary) -->
+            <div id="view-home" class="absolute inset-0 flex">
+                <!-- Chat Section -->
+                <div class="w-2/5 flex flex-col border-r bg-white">
+                    <div id="chatLog" class="chat-log flex-1 p-6 space-y-4">
+                        <div class="msg d-flex justify-content-start">
+                            <div class="msg-asst p-4 shadow-sm text-sm leading-relaxed max-w-[90%]">
+                                Hello! I'm your AI Travel Assistant. Where would you like to go for your next adventure?
                             </div>
                         </div>
                     </div>
-
-                    <div id="pipelineStatusOptimize" class="pipeline-status mb-2" style="display:none;" role="status" aria-live="polite">
-                        <div class="d-flex align-items-start gap-2">
-                            <div class="spinner-border spinner-border-sm text-primary mt-1" role="presentation" aria-hidden="true"></div>
-                            <div class="flex-grow-1 min-w-0">
-                                <div class="fw-semibold text-secondary small pipeline-status-label">Working…</div>
-                                <div class="text-muted pipeline-status-hint">Finding place suggestions…</div>
-                            </div>
+                    
+                    <div id="pipelineStatus" class="px-6 py-2 bg-blue-50 border-t border-blue-100 hidden">
+                        <div class="flex items-center gap-3 text-sm text-blue-700">
+                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                            <span class="pipeline-status-label font-medium">Thinking...</span>
                         </div>
                     </div>
 
-                    <div class="left-agent-compose d-flex flex-wrap gap-1 align-items-stretch mb-2">
-                        <input type="text" id="msgInput" class="form-control flex-grow-1" style="min-width:0;" placeholder="Trip details, answers, or place ideas…" autocomplete="off" aria-label="Message">
-                        <button type="button" class="btn btn-primary px-2 px-sm-3 flex-shrink-0" id="btnSend">Send</button>
-                        <button type="button" class="btn btn-outline-primary px-2 flex-shrink-0" id="btnOptimizeItinerary" disabled title="Get place or dining suggestions" style="display:none;">Suggestions</button>
-                    </div>
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <!-- <button type="button" class="btn btn-outline-secondary btn-sm" id="btnReset">New trip</button> -->
-                        <span id="optimizeWorking" class="small text-muted" style="display:none;">Working…</span>
-                    </div>
-
-                    <input type="hidden" id="optimizeRequestInput" value="">
-
-                    <div id="optimizePanel" class="flex-shrink-0 border-0" style="display:none;">
-                        <div class="optimize-panel-head">
-                            <p class="optimize-panel-title mb-0">Places &amp; apply</p>
-                            <button type="button" class="btn btn-link btn-sm text-secondary p-0 text-decoration-none" id="btnCloseOptimizePanel" title="Hide panel">Close</button>
+                    <div class="p-6 bg-white border-t">
+                        <div class="flex gap-2">
+                            <input type="text" id="msgInput" class="flex-1 border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Tell me about your dream trip...">
+                            <button id="btnSend" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl transition-colors shadow-sm">
+                                <i data-lucide="send" class="w-5 h-5"></i>
+                            </button>
                         </div>
-                        <details class="optimize-help">
-                            <summary>How suggestions work</summary>
-                            <div class="help-body">
-                                Use the same field above for trip chat and for place ideas. When suggestions return, choose a venue <strong>in the chat</strong> to apply. Search uses your <strong>session</strong> destination.
-                            </div>
-                        </details>
-                        <p id="optimizeNoItinHint" class="small text-warning mb-2" style="display:none;">Generate an itinerary first to use this.</p>
+                    </div>
+                </div>
+
+                <!-- Itinerary Section -->
+                <div class="flex-1 flex flex-col bg-slate-50">
+                    <div id="itinEmpty" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-12 text-center">
+                        <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
+                            <i data-lucide="map-pin" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-slate-600">No Itinerary Generated</h3>
+                        <p class="max-w-xs text-sm mt-1">Start chatting with the assistant to build your custom multi-day travel plan.</p>
                     </div>
 
-                    <div class="left-agent-prefs">
-                        <div class="prefs-label">Preferences</div>
-                        <div id="prefChips"><span class="text-muted small">None yet.</span></div>
+                    <div id="itinWrap" class="hidden flex-1 flex flex-col overflow-hidden">
+                        <div class="p-6 border-b bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <h3 class="text-lg font-bold text-slate-800">Your Trip</h3>
+                                <div id="itinActionsBar" class="flex gap-2">
+                                    <button id="btnPersonalize" class="text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Personalize
+                                    </button>
+                                    <button id="btnDownloadPdfItin" class="text-xs font-semibold px-3 py-1.5 bg-white border rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+                                        <i data-lucide="download" class="w-3.5 h-3.5"></i> PDF
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="trip-total" class="text-right">
+                                <!-- Trip total will be injected here -->
+                            </div>
+                        </div>
+                        
+                        <div id="itinBody" class="itinerary-scroll p-6 space-y-8">
+                            <!-- Day rows will be injected here -->
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-lg-8 col-xl-9 py-4 py-lg-5 px-3 px-lg-4" style="max-width: 100%;">
-                <div class="hero">
-                    <h1 class="mb-2">Travel AI</h1>
-                    <p>Describe where you want to go. We’ll confirm your preferences, then build a multi-day itinerary—one row per day; open a row for the full agent-grade detail.</p>
-                </div>
-
-                <div class="panel p-4 mb-4">
-                    <h2 class="h5 fw-semibold mb-2">My trips</h2>
-                    <p class="small text-muted mb-3">Saved automatically when a plan is generated. Opening a trip shows the <strong>stored snapshot</strong> (weather and prices as saved—not live refetched).</p>
-                    <div id="savedTripBanner" class="alert alert-secondary border py-2 px-3 small mb-3" style="display:none;" role="status">
-                        <strong>Viewing saved trip.</strong> This is historical data from when you saved it.
-                    </div>
-                    <div id="myTripsLoading" class="small text-muted mb-2" style="display:none;">Loading…</div>
-                    <div id="myTripsError" class="text-danger small mb-2" style="display:none;"></div>
-                    <div id="myTripsEmpty" class="small text-muted mb-0">No saved trips yet. Generate an itinerary to save one automatically.</div>
-                    <div class="table-responsive" id="myTripsWrap" style="display:none;">
-                        <table class="table table-sm table-hover table-itin mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Destination</th>
-                                    <th>Date range</th>
-                                    <th class="d-none d-md-table-cell">Saved</th>
-                                    <th class="text-end" style="width:5rem;">PDF</th>
-                                </tr>
-                            </thead>
-                            <tbody id="myTripsBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="panel p-4 mb-4">
-                    <h2 class="h5 fw-semibold mb-1">Itinerary</h2>
-                    <p class="small text-muted mb-2">One row per day. Click a row to open timing, places, meals, stay, and tips. Use <strong>My trips</strong> above to reopen a saved plan.</p>
-                    <div id="itinActionsBar" class="d-flex flex-wrap align-items-center gap-2 mb-3" style="display:none;">
-                        <div id="itinPdfDownloadWrap" style="display:none;">
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnDownloadPdfItin" title="Download stored trip as PDF">Download PDF</button>
-                            <span class="small text-muted ms-2">Uses saved snapshot (same as export).</span>
+            <!-- Trips View -->
+            <div id="view-trips" class="absolute inset-0 p-8 hidden overflow-y-auto">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-800">My Trips</h3>
+                            <p class="text-slate-500 text-sm mt-1">View and manage your saved travel itineraries.</p>
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnOpenOptimizePanel" style="display:none;">Places &amp; optimization</button>
                     </div>
-
-                    <div id="itinWrap" class="table-responsive">
-                        <table class="table table-hover table-itin mb-0" id="itinTable" style="display:none;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:5rem;">Day</th>
-                                    <th>Theme</th>
-                                    <th class="d-none d-sm-table-cell">Summary</th>
-                                    <th class="d-none d-md-table-cell text-end" style="min-width:6.5rem;">Est. (LLM)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="itinBody"></tbody>
-                        </table>
-                        <div id="itinEmpty" class="empty-itin border rounded">No itinerary generated yet.</div>
+                    
+                    <div id="myTripsEmpty" class="bg-white rounded-2xl p-12 border border-dashed text-center">
+                        <p class="text-slate-400">You haven't saved any trips yet.</p>
                     </div>
-                    <div id="pricingPanels" class="mt-3" style="display:none;"></div>
+                    
+                    <div id="myTripsWrap" class="hidden space-y-4">
+                        <!-- Trip cards will be injected here -->
+                    </div>
                 </div>
+            </div>
 
-                <div class="panel p-4" id="demoToolsSection" style="display:none;">
-                    <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#demoTools" aria-expanded="false">
-                        Demo tools (weather &amp; events)
-                    </button>
-                    <div class="collapse mt-2" id="demoTools">
-                        <p class="small text-muted mb-2">For internal demos: simulate reactive replanning.</p>
-                        <div id="eventNotification" class="alert alert-info py-2 small mb-3" style="display:none;" role="status">
-                            <strong>Background update:</strong> <span id="eventNotificationText"></span>
+            <!-- YouTube Import View -->
+            <div id="view-youtube" class="absolute inset-0 p-8 hidden overflow-y-auto">
+                <div class="max-w-2xl mx-auto mt-12">
+                    <div class="bg-white rounded-2xl shadow-sm border p-8">
+                        <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mb-6">
+                            <i data-lucide="youtube" class="w-7 h-7"></i>
                         </div>
-                        <button type="button" class="btn btn-warning btn-sm me-2" id="btnRain">Simulate rain</button>
-                        <button type="button" class="btn btn-danger btn-sm" id="btnPlaceClosed">Place is closed</button>
+                        <h3 class="text-2xl font-bold text-slate-800">Import from YouTube</h3>
+                        <p class="text-slate-500 mt-2 mb-8">Paste a YouTube URL of a travel vlog, and we'll extract the itinerary for you.</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">YouTube URL</label>
+                                <input type="text" id="ytUrlInput" class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none transition-all" placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Start Date</label>
+                                    <input type="date" id="ytStartDate" class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Style (Optional)</label>
+                                    <select id="ytStyle" class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                        <option value="balanced">Balanced</option>
+                                        <option value="luxury">Luxury</option>
+                                        <option value="adventure">Adventure</option>
+                                        <option value="cultural">Cultural</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="btnImportYoutube" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2">
+                                <i data-lucide="zap" class="w-5 h-5"></i>
+                                Generate Itinerary
+                            </button>
+                        </div>
+                        
+                        <div id="ytStatus" class="mt-6 hidden">
+                            <div class="flex items-center gap-3 text-sm text-red-700 bg-red-50 p-4 rounded-xl border border-red-100">
+                                <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
+                                <span id="ytStatusLabel">Processing transcript... this may take a minute.</span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Notifications View -->
+            <div id="view-notifications" class="absolute inset-0 p-8 hidden overflow-y-auto">
+                <div class="max-w-2xl mx-auto">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-8">Notifications</h3>
+                    
+                    <div id="notificationsEmpty" class="bg-white rounded-2xl p-12 border border-dashed text-center">
+                        <p class="text-slate-400">All caught up! No new notifications.</p>
+                    </div>
+                    
+                    <div id="notificationsWrap" class="space-y-3">
+                        <!-- Notifications will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="dayDetailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div class="p-6 border-b flex items-center justify-between">
+                <h2 id="dayDetailTitle" class="text-xl font-bold text-slate-800">Day Details</h2>
+                <button onclick="closeModal()" class="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="dayDetailBody" class="p-6 overflow-y-auto space-y-6">
+                <!-- Segments will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="personalizeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
+            <div class="p-6 border-b flex items-center justify-between bg-blue-600 text-white">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    <h2 class="text-xl font-bold">Personalize Your Trip</h2>
+                </div>
+                <button onclick="closePersonalizeModal()" class="p-2 hover:bg-blue-700 rounded-full transition-colors">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="personalizeBody" class="p-8 overflow-y-auto">
+                <!-- Personalization content will be injected here -->
+                <div id="personalizeLoading" class="flex flex-col items-center justify-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+                    <p class="text-slate-500 font-medium">Analyzing your itinerary for gaps...</p>
+                </div>
+                <div id="personalizeContent" class="hidden space-y-8">
+                    <!-- Gaps will be injected here -->
+                </div>
+                <div id="personalizeEmpty" class="hidden text-center py-12">
+                    <div class="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="check-circle" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">All Set!</h3>
+                    <p class="text-slate-500">Your itinerary looks complete. No major logistical gaps found.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="dayDetailModal" tabindex="-1" aria-labelledby="dayDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title h5" id="dayDetailModalLabel">Day detail</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="dayDetailBody"></div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const chatLog = document.getElementById('chatLog');
-        const msgInput = document.getElementById('msgInput');
-        const prefChips = document.getElementById('prefChips');
-        const itinTable = document.getElementById('itinTable');
-        const itinBody = document.getElementById('itinBody');
-        const itinEmpty = document.getElementById('itinEmpty');
-        const dayDetailBody = document.getElementById('dayDetailBody');
-        const dayDetailModalEl = document.getElementById('dayDetailModal');
-        let itineraryBundle = null;
-        let dayModal = null;
-        let viewingSavedSnapshot = false;
+        // State
+        let currentItinerary = null;
         let lastSavedItineraryId = null;
-        let preferenceScope = 'session';
-        let editDayIndex = null;
-        let editDaySnapshot = null;
-        let cachedPersonaPartial = {};
-        let lastOptimizationSnapshot = null;
+        let activeView = 'home';
+        let unreadCount = 0;
+        let answeredGaps = []; // { id, prompt, label, value }
 
-        const PIPELINE_STEPS_CHAT = [
-            'Checking preferences…',
-            'Loading map places…',
-            'Planning your days…',
-            'Applying pricing & estimates…'
-        ];
-        const PIPELINE_STEPS_OPTIMIZE = [
-            'Fetching place candidates…',
-            'Running optimization agent…',
-            'Preparing suggestions…'
-        ];
-        const PIPELINE_STEPS_APPLY = [
-            'Updating your itinerary…',
-            'Refreshing pricing…'
-        ];
+        // Icons
+        lucide.createIcons();
 
-        function startPipeline(containerId, stepKey) {
-            const root = document.getElementById(containerId);
-            if (!root) {
-                return function noop() {};
-            }
-            const label = root.querySelector('.pipeline-status-label');
-            const steps = stepKey === 'optimize'
-                ? PIPELINE_STEPS_OPTIMIZE
-                : (stepKey === 'apply' ? PIPELINE_STEPS_APPLY : PIPELINE_STEPS_CHAT);
-            root.style.display = 'block';
-            if (label) label.textContent = 'Working…';
-            let stepIndex = 0;
-            let delayTimer = null;
-            let rotateTimer = null;
-            delayTimer = setTimeout(function () {
-                if (label) label.textContent = steps[0];
-                rotateTimer = setInterval(function () {
-                    stepIndex = (stepIndex + 1) % steps.length;
-                    if (label) label.textContent = steps[stepIndex];
-                }, 1800);
-            }, 500);
-            return function stopPipeline() {
-                if (delayTimer) clearTimeout(delayTimer);
-                if (rotateTimer) clearInterval(rotateTimer);
-                root.style.display = 'none';
+        // View Switching
+        function switchView(viewId) {
+            document.querySelectorAll('main > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.sidebar-link').forEach(a => a.classList.remove('active'));
+            document.getElementById(`nav-${viewId}`).classList.add('active');
+            
+            const titles = {
+                home: 'Plan a New Trip',
+                trips: 'My Trips',
+                youtube: 'Import from YouTube',
+                notifications: 'Notifications'
             };
+            document.getElementById('view-title').textContent = titles[viewId];
+            activeView = viewId;
+
+            if (viewId === 'trips') loadMyTrips();
+            if (viewId === 'notifications') loadNotifications();
         }
 
-        function appendChat(role, text, opts) {
-            const wrap = document.createElement('div');
-            wrap.className = 'msg d-flex ' + (role === 'user' ? 'justify-content-end' : 'justify-content-start');
-            if (opts && opts.optimizeThread) {
-                wrap.setAttribute('data-opt-thread', '1');
-            }
-            const inner = document.createElement('div');
-            inner.className = role === 'user' ? 'msg-user' : 'msg-asst';
-            inner.textContent = text;
-            wrap.appendChild(inner);
-            chatLog.appendChild(wrap);
-            chatLog.scrollTop = chatLog.scrollHeight;
-        }
-
-        function appendChatAssistantHtml(html, opts) {
-            const wrap = document.createElement('div');
-            wrap.className = 'msg d-flex justify-content-start';
-            if (opts && opts.optimizeThread) {
-                wrap.setAttribute('data-opt-thread', '1');
-            }
-            const inner = document.createElement('div');
-            inner.className = 'msg-asst msg-asst-rich small';
-            inner.innerHTML = html;
-            wrap.appendChild(inner);
-            chatLog.appendChild(wrap);
-            chatLog.scrollTop = chatLog.scrollHeight;
-        }
-
-        function removeOptimizeThreadMessages() {
-            const chat = document.getElementById('chatLog');
-            if (!chat) return;
-            chat.querySelectorAll('.msg[data-opt-thread="1"]').forEach(function (row) {
-                if (row.parentNode) {
-                    row.parentNode.removeChild(row);
-                }
-            });
-        }
-
-        function renderChips(partial, scope) {
-            const sc = scope || preferenceScope || 'session';
-            preferenceScope = sc;
-            if (partial && typeof partial === 'object') {
-                if (sc === 'trip_saved') {
-                    cachedPersonaPartial = { ...partial };
-                } else {
-                    cachedPersonaPartial = { ...cachedPersonaPartial, ...partial };
-                }
-            }
-            const keys = ['destination', 'trip_duration', 'travel_style', 'food_priority', 'walking_tolerance', 'pace', 'budget_sensitivity', 'display_currency', 'trip_start_date'];
-            const parts = [];
-            for (const k of keys) {
-                if (partial && partial[k] !== undefined && partial[k] !== null && String(partial[k]).trim() !== '') {
-                    const label = k.replace(/_/g, ' ');
-                    parts.push(`<span class="chip"><strong>${label}:</strong> ${escapeHtml(String(partial[k]))}</span>`);
-                }
-            }
-            const scopeLine = sc === 'trip_saved'
-                ? '<div class="small text-info mb-2 fw-semibold">This trip (saved)</div>'
-                : '<div class="small text-muted mb-2">New session</div>';
-            const inner = parts.length ? parts.join('') : '<span class="text-muted small">None yet.</span>';
-            prefChips.innerHTML = scopeLine + inner;
-        }
-
-        function escapeHtml(s) {
-            const d = document.createElement('div');
-            d.textContent = s;
-            return d.innerHTML;
-        }
-
-        function weatherSourceLabel(id) {
-            if (id === 'open-meteo') return 'Open-Meteo';
-            return id ? String(id) : 'Weather API';
-        }
-
-        function segmentPricingHtml(seg) {
-            const p = seg.pricing || {};
-            if (p.availability === 'ok' && p.amount != null && p.amount !== undefined) {
-                const src = p.source_id === 'frankfurter' ? 'Frankfurter' : (p.source_id || 'API');
-                const fetched = p.fetched_at ? ' · Fetched (UTC): ' + escapeHtml(String(p.fetched_at)) : '';
-                return '<div class="mt-2 pt-2 border-top"><span class="text-uppercase small text-muted fw-semibold">Line price</span><p class="small mb-0"><strong>' + escapeHtml(String(p.amount)) + ' ' + escapeHtml(String(p.currency || '')) + '</strong> · Source: ' + escapeHtml(src) + fetched + '</p></div>';
-            }
-            const reason = p.reason || 'Price not available from integrated sources';
-            const code = p.error_code ? ' (' + escapeHtml(String(p.error_code)) + ')' : '';
-            return '<div class="mt-2 pt-2 border-top"><span class="text-uppercase small text-muted fw-semibold">Line price</span><p class="small text-secondary mb-0">' + escapeHtml(reason) + code + '</p></div>';
-        }
-
-        function dayPricingRollupHtml(day) {
-            const dr = day.pricing_rollups;
-            if (!dr) return '';
-            let body = '';
-            if (dr.api_backed_subtotal != null && dr.currency) {
-                body = 'Day subtotal (API-backed lines only): <strong>' + escapeHtml(String(dr.api_backed_subtotal)) + '</strong> ' + escapeHtml(String(dr.currency));
-            } else if (dr.coverage_note) {
-                body = escapeHtml(dr.coverage_note);
-            } else {
-                body = 'No API-backed line prices for this day.';
-            }
-            const n = (dr.lines_with_api_price != null) ? dr.lines_with_api_price : 0;
-            const t = (dr.lines_in_day != null) ? dr.lines_in_day : 0;
-            return '<div class="mt-3 p-2 border rounded bg-light small"><span class="text-uppercase text-muted fw-semibold">Day pricing rollup</span><p class="mb-0 mt-1">' + body + ' <span class="text-muted">(' + n + ' / ' + t + ' lines with API prices)</span></p></div>';
-        }
-
-        function tripPricingRollupHtml(bundle) {
-            const pr = bundle.pricing_rollups && bundle.pricing_rollups.trip;
-            if (!pr) return '';
-            let body = '';
-            if (pr.api_backed_subtotal != null && pr.currency) {
-                body = 'Trip subtotal (API-backed lines only): <strong>' + escapeHtml(String(pr.api_backed_subtotal)) + '</strong> ' + escapeHtml(String(pr.currency));
-            } else if (pr.coverage_note) {
-                body = escapeHtml(pr.coverage_note);
-            } else {
-                body = 'No API-backed line item prices.';
-            }
-            const n = pr.lines_with_api_price != null ? pr.lines_with_api_price : 0;
-            const tot = pr.lines_total != null ? pr.lines_total : 0;
-            return '<div class="p-2 border rounded small mb-2"><span class="text-uppercase text-muted fw-semibold">Trip pricing rollup</span><p class="mb-0 mt-1">' + body + ' <span class="text-muted">(' + n + ' of ' + tot + ' lines)</span></p></div>';
-        }
-
-        function formatMoneyAmount(n) {
-            if (n == null || n === '' || Number.isNaN(Number(n))) return '—';
-            return Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
-
-        function estimatedRangePlain(minAmt, maxAmt, currency) {
-            const cur = String(currency || '').trim();
-            return formatMoneyAmount(minAmt) + ' – ' + formatMoneyAmount(maxAmt) + (cur ? ' ' + cur : '');
-        }
-
-        function estimatedRangeHtml(minAmt, maxAmt, currency) {
-            const cur = escapeHtml(String(currency || '').trim());
-            return '<strong>' + escapeHtml(formatMoneyAmount(minAmt)) + ' – ' + escapeHtml(formatMoneyAmount(maxAmt)) + '</strong>' + (cur ? ' ' + cur : '');
-        }
-
-        function tripEstimatedRollupHtml(bundle) {
-            const er = bundle.estimated_pricing_rollups && bundle.estimated_pricing_rollups.trip_estimated_cost;
-            if (!er) {
-                return '<div class="p-2 border rounded small mb-2 bg-light"><span class="text-uppercase text-muted fw-semibold">Estimated trip cost (LLM)</span><p class="mb-0 mt-1 text-secondary small">No estimate in this snapshot yet. Save your trip and use <strong>Refresh pricing</strong> to populate.</p></div>';
-            }
-            const body = estimatedRangeHtml(er.min_amount, er.max_amount, er.currency);
-            return '<div class="p-2 border rounded small mb-2 bg-light"><span class="text-uppercase text-muted fw-semibold">Estimated trip cost (LLM)</span><p class="mb-0 mt-1">' + body + '</p><p class="mb-0 mt-1 text-muted small">Indicative range only — not a quote. Edits may require another refresh.</p></div>';
-        }
-
-        function dayEstimatedRangeCellHtml(day) {
-            const dr = day.estimated_pricing_rollups && day.estimated_pricing_rollups.day_estimated_cost;
-            if (!dr) {
-                return '<span class="text-muted">—</span>';
-            }
-            const txt = estimatedRangePlain(dr.min_amount, dr.max_amount, dr.currency);
-            return '<span class="text-nowrap">' + escapeHtml(txt) + '</span>';
-        }
-
-        function segmentEstimatedHtml(seg) {
-            const e = seg.estimated_pricing;
-            if (!e) {
-                return '<div class="mt-2 pt-2 border-top"><span class="text-uppercase small text-muted fw-semibold">Estimated range (LLM)</span><p class="small text-secondary mb-0">No estimate for this segment yet.</p></div>';
-            }
-            const rangeInner = estimatedRangeHtml(e.min_amount, e.max_amount, e.currency);
-            const conf = e.confidence ? ' · Confidence: ' + escapeHtml(String(e.confidence)) : '';
-            const lu = e.last_updated_at ? '<p class="small text-muted mb-0">Updated (UTC): ' + escapeHtml(String(e.last_updated_at)) + '</p>' : '';
-            const src = e.source ? '<span class="text-muted"> · ' + escapeHtml(String(e.source)) + '</span>' : '';
-            return '<div class="mt-2 pt-2 border-top"><span class="text-uppercase small text-muted fw-semibold">Estimated range (LLM)</span><p class="small mb-0">' + rangeInner + conf + src + '</p>' + lu + '</div>';
-        }
-
-        async function refreshPricing() {
-            const btn = document.getElementById('btnRefreshPricing');
-            const errEl = document.getElementById('pricingRefreshError');
-            if (!lastSavedItineraryId) return;
-            if (errEl) {
-                errEl.style.display = 'none';
-                errEl.textContent = '';
-            }
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Refreshing...';
-            }
-            try {
-                const res = await fetch('/itinerary/' + encodeURIComponent(lastSavedItineraryId) + '/refresh-pricing', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    let msg = 'Could not refresh pricing.';
-                    if (data.detail) {
-                        if (typeof data.detail === 'string') {
-                            msg = data.detail;
-                        } else if (Array.isArray(data.detail)) {
-                            msg = data.detail.map(function (d) { return d.msg || JSON.stringify(d); }).join('; ');
-                        }
-                    }
-                    if (errEl) {
-                        errEl.textContent = msg;
-                        errEl.style.display = 'inline';
-                    }
-                    return;
-                }
-                if (data.itinerary) {
-                    itineraryBundle = data.itinerary;
-                    renderItinerary(itineraryBundle);
-                }
-            } catch (e) {
-                if (errEl) {
-                    errEl.textContent = 'Could not refresh pricing.';
-                    errEl.style.display = 'inline';
-                }
-            } finally {
-                const b = document.getElementById('btnRefreshPricing');
-                if (b) {
-                    b.disabled = !lastSavedItineraryId;
-                    b.textContent = 'Refresh pricing';
-                }
-            }
-        }
-
-        function wireRefreshPricingButton() {
-            const btn = document.getElementById('btnRefreshPricing');
-            if (!btn) return;
-            btn.disabled = !lastSavedItineraryId;
-            btn.textContent = 'Refresh pricing';
-            btn.onclick = function () { refreshPricing(); };
-        }
-
-        function updateOptimizeControls() {
-            const btn = document.getElementById('btnOptimizeItinerary');
-            const hint = document.getElementById('optimizeNoItinHint');
-            const panel = document.getElementById('optimizePanel');
-            const panelOpen = !!(panel && panel.style.display === 'block');
-            const hasItin = !!(itineraryBundle && itineraryBundle.itinerary_version === 2 && Array.isArray(itineraryBundle.days) && itineraryBundle.days.length > 0);
-            const btnSend = document.getElementById('btnSend');
-            if (btnSend) {
-                btnSend.style.display = '';
-            }
-            if (btn) {
-                btn.disabled = !hasItin;
-                const showSuggestions = hasItin && panelOpen;
-                btn.style.display = showSuggestions ? '' : 'none';
-            }
-            if (hint) {
-                hint.style.display = hasItin ? 'none' : 'block';
-            }
-        }
-
-        function hideOptimizationApplyUI() {
-            lastOptimizationSnapshot = null;
-            const chat = document.getElementById('chatLog');
-            if (!chat) return;
-            chat.querySelectorAll('[data-opt-apply="1"]').forEach(function (node) {
-                const row = node.closest('.msg');
-                if (row && row.parentNode) {
-                    row.parentNode.removeChild(row);
-                }
-            });
-        }
-
-        function clearOptApplyInlineError() {
-            const el = document.getElementById('optApplyInlineError');
-            if (el) {
-                el.textContent = '';
-                el.style.display = 'none';
-            }
-        }
-
-        function showOptApplyInlineError(msg) {
-            const el = document.getElementById('optApplyInlineError');
-            if (el) {
-                el.textContent = msg;
-                el.style.display = 'block';
-                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-                appendChat('assistant', msg, { optimizeThread: true });
-            }
-        }
-
-        function renderOptimizationApplyUI(data) {
-            lastOptimizationSnapshot = data;
-            const recs = data.recommendations;
-            const cands = data.candidate_places;
-            if (!Array.isArray(recs) || !recs.length || data.error) {
-                if (!data.error && (!recs || !recs.length)) {
-                    lastOptimizationSnapshot = null;
-                }
-                return;
-            }
-            if (!Array.isArray(cands) || !cands.length) {
-                lastOptimizationSnapshot = null;
-                return;
-            }
-
-            let h = '';
-            h += '<div class="opt-apply-chat-title">Apply to your plan</div>';
-            h += '<p class="opt-apply-chat-lead mb-0">Choose a venue, set the target segment if needed, then apply or dismiss.</p>';
-            h += '<div id="optApplyInlineError" class="alert alert-danger py-1 px-2 small mb-2" style="display:none;" role="alert"></div>';
-            recs.forEach(function (r, i) {
-                const id = 'optRec' + i;
-                h += '<div class="opt-venue-tile"><div class="form-check">';
-                h += '<input class="form-check-input" type="radio" name="optimizeRec" id="' + id + '" value="' + i + '">';
-                h += '<label class="form-check-label small w-100" for="' + id + '"><span class="fw-semibold d-block">' + escapeHtml(String(r.name || ('Option ' + (i + 1)))) + '</span>';
-                if (r.why) {
-                    h += '<span class="text-muted small">' + escapeHtml(String(r.why)) + '</span>';
-                }
-                const bits = [];
-                if (r.dish_confidence) bits.push('Dish match: ' + String(r.dish_confidence));
-                if (r.estimated_cost) bits.push('Est. cost: ' + String(r.estimated_cost));
-                if (r.travel_time) bits.push('Travel: ' + String(r.travel_time));
-                if (bits.length) {
-                    h += '<span class="d-block text-muted small mt-1">' + escapeHtml(bits.join(' · ')) + '</span>';
-                }
-                h += '</label></div></div>';
-            });
-            h += '<div class="opt-target-chat-box">';
-            h += '<div class="small fw-semibold mb-2">Target segment</div>';
-            h += '<div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="optUseAutoTarget" checked><label class="form-check-label small" for="optUseAutoTarget">Use auto target (infer from query and timing)</label></div>';
-            h += '<div class="row g-2">';
-            h += '<div class="col-sm-6"><label class="form-label small mb-1" for="optTargetDay">Day</label><select id="optTargetDay" class="form-select form-select-sm" disabled></select></div>';
-            h += '<div class="col-sm-6"><label class="form-label small mb-1" for="optTargetSegment">Segment</label><select id="optTargetSegment" class="form-select form-select-sm" disabled></select></div>';
-            h += '</div>';
-            h += '<div class="small text-muted mt-2" id="optTargetHint">Auto-target will be used unless you uncheck it and choose Day/Segment.</div>';
-            h += '</div>';
-            h += '<div class="opt-apply-actions d-flex flex-wrap gap-2">';
-            h += '<button type="button" class="btn btn-primary btn-sm" id="btnOptimizeApply">Apply selection</button>';
-            h += '<button type="button" class="btn btn-outline-secondary btn-sm" id="btnOptimizeCancel">Dismiss</button>';
-            h += '</div>';
-
-            const row = document.createElement('div');
-            row.className = 'msg d-flex justify-content-start';
-            const inner = document.createElement('div');
-            inner.className = 'msg-asst msg-asst-rich msg-opt-apply-wrap';
-            inner.setAttribute('data-opt-apply', '1');
-            inner.innerHTML = h;
-            row.appendChild(inner);
-            chatLog.appendChild(row);
-            chatLog.scrollTop = chatLog.scrollHeight;
-
-            const daySel = document.getElementById('optTargetDay');
-            const segSel = document.getElementById('optTargetSegment');
-            const autoChk = document.getElementById('optUseAutoTarget');
-
-            function fillDays() {
-                if (!daySel) return;
-                daySel.innerHTML = '';
-                const days = (itineraryBundle && itineraryBundle.days) ? itineraryBundle.days : [];
-                days.forEach(function (d, i) {
-                    const dnum = d.day != null ? d.day : (i + 1);
-                    const opt = document.createElement('option');
-                    opt.value = String(i);
-                    opt.textContent = 'Day ' + dnum + (d.title ? ' — ' + String(d.title) : '');
-                    daySel.appendChild(opt);
-                });
-            }
-
-            function fillSegments() {
-                if (!daySel || !segSel) return;
-                segSel.innerHTML = '';
-                const di = parseInt(daySel.value || '0', 10);
-                const days = (itineraryBundle && itineraryBundle.days) ? itineraryBundle.days : [];
-                const segs = days[di] && Array.isArray(days[di].segments) ? days[di].segments : [];
-                segs.forEach(function (s, si) {
-                    const tl = s.time_label != null ? String(s.time_label) : 'Segment';
-                    const pn = s.place_name != null ? String(s.place_name) : '';
-                    const opt = document.createElement('option');
-                    opt.value = String(si);
-                    opt.textContent = tl + (pn ? ' — ' + pn : '');
-                    segSel.appendChild(opt);
-                });
-            }
-
-            function updateTargetEnabled() {
-                const useAuto = !!(autoChk && autoChk.checked);
-                if (daySel) daySel.disabled = useAuto;
-                if (segSel) segSel.disabled = useAuto;
-                const hint = document.getElementById('optTargetHint');
-                if (hint) {
-                    hint.textContent = useAuto
-                        ? 'Auto-target will be used unless you uncheck it and choose Day/Segment.'
-                        : 'Selected Day/Segment will override auto-target.';
-                }
-            }
-
-            fillDays();
-            fillSegments();
-            updateTargetEnabled();
-            if (daySel) daySel.addEventListener('change', fillSegments);
-            if (autoChk) autoChk.addEventListener('change', updateTargetEnabled);
-            document.getElementById('btnOptimizeApply').addEventListener('click', applyOptimizationSelection);
-            document.getElementById('btnOptimizeCancel').addEventListener('click', cancelOptimizationPending);
-        }
-
-        function cancelOptimizationPending() {
-            hideOptimizationApplyUI();
-            const inp = document.getElementById('optimizeRequestInput');
-            if (inp) inp.value = '';
-        }
-
-        async function applyOptimizationSelection() {
-            const snap = lastOptimizationSnapshot;
-            const work = document.getElementById('optimizeWorking');
-            if (!snap || !itineraryBundle) return;
-            const sel = document.querySelector('input[name="optimizeRec"]:checked');
-            if (!sel) {
-                showOptApplyInlineError('Select one of the venues above.');
-                return;
-            }
-            const idx = parseInt(sel.value, 10);
-            const useAutoEl = document.getElementById('optUseAutoTarget');
-            const daySel = document.getElementById('optTargetDay');
-            const segSel = document.getElementById('optTargetSegment');
-            clearOptApplyInlineError();
-            if (work) work.style.display = 'inline';
-            const stopPipeline = startPipeline('pipelineStatusOptimize', 'apply');
-            try {
-                const payload = {
-                    itinerary_bundle: itineraryBundle,
-                    selected_recommendation_index: idx,
-                    optimization_snapshot: snap,
-                    saved_itinerary_id: lastSavedItineraryId || null
-                };
-                const useAuto = !useAutoEl || useAutoEl.checked;
-                if (!useAuto) {
-                    payload.target_day_index = parseInt((daySel && daySel.value) ? daySel.value : '0', 10);
-                    payload.target_segment_index = parseInt((segSel && segSel.value) ? segSel.value : '0', 10);
-                }
-                const res = await fetch('/itinerary/optimize/apply', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    let msg = 'Apply failed.';
-                    if (data.detail) {
-                        if (typeof data.detail === 'string') {
-                            msg = data.detail;
-                        } else if (Array.isArray(data.detail)) {
-                            msg = data.detail.map(function (d) { return d.msg || JSON.stringify(d); }).join('; ');
-                        } else if (data.detail.errors) {
-                            msg = data.detail.errors.join('; ');
-                        }
-                    }
-                    showOptApplyInlineError(msg);
-                    return;
-                }
-                if (data.itinerary) {
-                    hideOptimizationApplyUI();
-                    const inpClear = document.getElementById('optimizeRequestInput');
-                    if (inpClear) inpClear.value = '';
-                    appendChat('assistant', 'Applied to your plan. Pricing estimates were refreshed.');
-                    itineraryBundle = data.itinerary;
-                    renderItinerary(itineraryBundle);
-                    loadMyTrips();
-                }
-            } catch (e) {
-                showOptApplyInlineError('Could not apply selection.');
-            } finally {
-                stopPipeline();
-                if (work) work.style.display = 'none';
-            }
-        }
-
-        function renderOptimizationResult(data) {
-            if (!data || typeof data !== 'object') {
-                appendChat('assistant', 'No suggestion data returned.', { optimizeThread: true });
-                hideOptimizationApplyUI();
-                return;
-            }
-            if (data.error) {
-                appendChatAssistantHtml('<div class="alert alert-danger py-2 small mb-0">' + escapeHtml(String(data.error)) + '</div>', { optimizeThread: true });
-                hideOptimizationApplyUI();
-                return;
-            }
-            const recs = data.recommendations;
-            const cands = data.candidate_places;
-            const showApply = Array.isArray(recs) && recs.length > 0
-                && Array.isArray(cands) && cands.length > 0;
-            let html = '<div class="small text-muted text-uppercase fw-semibold mb-2" style="letter-spacing:0.05em;font-size:0.65rem;">Suggestions</div>';
-            if (data.warning_message) {
-                html += '<div class="alert alert-warning py-2 small">' + escapeHtml(String(data.warning_message)) + '</div>';
-            }
-            const prev = data.selected_option_preview;
-            if (prev && typeof prev === 'object') {
-                const level = (prev.impact_level || '').toString().toUpperCase();
-                let badgeClass = 'bg-secondary';
-                if (level === 'LOW') badgeClass = 'bg-success';
-                else if (level === 'MEDIUM') badgeClass = 'bg-warning text-dark';
-                else if (level === 'HIGH') badgeClass = 'bg-danger';
-                html += '<div class="border rounded p-2 mb-2 bg-light"><div class="fw-semibold mb-1">Impact preview <span class="badge ' + badgeClass + '">' + escapeHtml(level || '—') + '</span></div>';
-                if (prev.delay) {
-                    html += '<p class="mb-1"><strong>Delay:</strong> ' + escapeHtml(String(prev.delay)) + '</p>';
-                }
-                if (prev.cost_change) {
-                    html += '<p class="mb-1"><strong>Cost change:</strong> ' + escapeHtml(String(prev.cost_change)) + '</p>';
-                }
-                const nt = prev.new_timing;
-                if (Array.isArray(nt) && nt.length) {
-                    html += '<p class="mb-0"><strong>New timing:</strong></p><ul class="mb-0 ps-3">';
-                    nt.forEach(function (t) {
-                        html += '<li>' + escapeHtml(String(t)) + '</li>';
-                    });
-                    html += '</ul>';
-                } else if (nt) {
-                    html += '<p class="mb-0"><strong>New timing:</strong> ' + escapeHtml(String(nt)) + '</p>';
-                }
-                html += '</div>';
-            }
-            if (data.meal_edit && data.meal_edit.flat_segment_index != null) {
-                const tail = showApply
-                    ? ' (you can override in the apply card below.)'
-                    : ' (adjust below if needed).';
-                html += '<p class="small text-muted mb-2">Auto-target suggestion: segment #' + escapeHtml(String(data.meal_edit.flat_segment_index)) + tail + '</p>';
-            }
-            if (Array.isArray(recs) && recs.length) {
-                if (!showApply) {
-                    html += '<div class="fw-semibold mb-2">Top suggestions</div>';
-                    recs.slice(0, 5).forEach(function (r, i) {
-                        html += '<div class="card card-body py-2 px-3 mb-2"><div class="fw-semibold">' + escapeHtml(String(r.name || ('Option ' + (i + 1)))) + '</div>';
-                        if (r.why) {
-                            html += '<p class="mb-1 small">' + escapeHtml(String(r.why)) + '</p>';
-                        }
-                        const bits = [];
-                        if (r.dish_confidence) bits.push('Dish match: ' + String(r.dish_confidence));
-                        if (r.estimated_cost) bits.push('Est. cost: ' + String(r.estimated_cost));
-                        if (r.travel_time) bits.push('Travel: ' + String(r.travel_time));
-                        if (bits.length) {
-                            html += '<p class="mb-0 text-muted small">' + escapeHtml(bits.join(' · ')) + '</p>';
-                        }
-                        html += '</div>';
-                    });
-                }
-            } else if (!data.error) {
-                html += '<p class="text-muted mb-2">No ranked recommendations returned.</p>';
-            }
-            const upd = data.updated_itinerary;
-            if (Array.isArray(upd) && upd.length) {
-                html += '<div class="fw-semibold mb-1">Preview (segments)</div>';
-                const maxShow = 5;
-                const show = upd.slice(0, maxShow);
-                html += '<ul class="ps-3 mb-1">';
-                show.forEach(function (seg) {
-                    const tl = seg.time_label != null ? String(seg.time_label) : '—';
-                    const ti = seg.title != null ? String(seg.title) : '';
-                    const pl = seg.place_name != null ? String(seg.place_name) : '';
-                    html += '<li>' + escapeHtml(tl) + ' — ' + escapeHtml(ti) + (pl ? ' · ' + escapeHtml(pl) : '') + '</li>';
-                });
-                html += '</ul>';
-                if (upd.length > maxShow) {
-                    html += '<p class="text-muted small mb-0">… and ' + (upd.length - maxShow) + ' more segment(s).</p>';
-                }
-                if (upd.length <= 12) {
-                    html += '<details class="mt-2"><summary class="small text-muted">Raw JSON</summary><pre class="small bg-light border rounded p-2 mt-1 mb-0" style="max-height:180px;overflow:auto;">' + escapeHtml(JSON.stringify(upd, null, 2)) + '</pre></details>';
-                }
-            }
-            appendChatAssistantHtml(html || '<p class="text-muted mb-0">Done.</p>', { optimizeThread: true });
-            renderOptimizationApplyUI(data);
-        }
-
-        async function runOptimization() {
-            const msgEl = document.getElementById('msgInput');
-            const hiddenOpt = document.getElementById('optimizeRequestInput');
-            const btn = document.getElementById('btnOptimizeItinerary');
-            const work = document.getElementById('optimizeWorking');
-            const text = (msgEl && msgEl.value) ? msgEl.value.trim() : '';
-            if (hiddenOpt) hiddenOpt.value = text;
-            if (!text) {
-                appendChat('assistant', 'Enter what you want suggestions for (e.g. lunch, cafe, museum) in the field above, then try again.', { optimizeThread: true });
-                if (msgEl) msgEl.focus();
-                return;
-            }
-            if (!itineraryBundle || !itineraryBundle.days || !itineraryBundle.days.length) return;
-            setOptimizePanelVisible(true);
-            hideOptimizationApplyUI();
-            appendChat('user', text, { optimizeThread: true });
-            if (msgEl) msgEl.value = '';
-            if (btn) {
-                btn.disabled = true;
-            }
-            if (work) work.style.display = 'inline';
-            const stopPipeline = startPipeline('pipelineStatusOptimize', 'optimize');
-            try {
-                const payload = {
-                    user_request: text,
-                    itinerary_bundle: itineraryBundle
-                };
-                if (cachedPersonaPartial && typeof cachedPersonaPartial === 'object' && Object.keys(cachedPersonaPartial).length) {
-                    payload.persona = cachedPersonaPartial;
-                }
-                const res = await fetch('/itinerary/optimize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    let msg = 'Request failed.';
-                    if (data.detail) {
-                        if (typeof data.detail === 'string') {
-                            msg = data.detail;
-                        } else if (Array.isArray(data.detail)) {
-                            msg = data.detail.map(function (d) { return d.msg || JSON.stringify(d); }).join('; ');
-                        }
-                    }
-                    appendChat('assistant', msg, { optimizeThread: true });
-                    return;
-                }
-                renderOptimizationResult(data);
-            } catch (e) {
-                appendChat('assistant', 'Could not reach the server.', { optimizeThread: true });
-            } finally {
-                stopPipeline();
-                if (work) work.style.display = 'none';
-                updateOptimizeControls();
-            }
-        }
-
-        function referenceFxHtml(bundle) {
-            const fx = bundle.pricing_reference_fx;
-            if (!fx) return '';
-            if (fx.availability === 'unavailable') {
-                return '<div class="p-3 border rounded bg-light small text-secondary mb-2"><strong class="d-block mb-1">Reference exchange rates</strong>' + escapeHtml(fx.reason || 'Unavailable') + '</div>';
-            }
-            const rates = fx.rates || {};
-            const parts = Object.keys(rates).map(function (c) {
-                return escapeHtml(c) + ': ' + escapeHtml(String(rates[c]));
-            });
-            const base = escapeHtml(String(fx.base_currency || ''));
-            const rd = fx.rate_date ? ' · Rate date: ' + escapeHtml(String(fx.rate_date)) : '';
-            const fetched = fx.fetched_at ? ' · Fetched (UTC): ' + escapeHtml(String(fx.fetched_at)) : '';
-            const disc = fx.disclaimer ? '<p class="mb-0 mt-2 text-muted small">' + escapeHtml(fx.disclaimer) + '</p>' : '';
-            return '<div class="p-3 border rounded small mb-2"><strong class="d-block mb-1">Reference exchange rates (ECB)</strong><p class="mb-1">1 ' + base + ' = ' + parts.join(', ') + rd + fetched + '</p>' + disc + '</div>';
-        }
-
-        function segmentWeatherHtml(seg) {
-            const avail = seg.weather_availability;
-            const fdate = seg.forecast_date ? String(seg.forecast_date) : '';
-            if (avail === 'unavailable') {
-                let msg = 'Weather unavailable.';
-                if (seg.weather_error === 'missing_coordinates') {
-                    msg = 'Weather unavailable — no coordinates for this stop.';
-                } else if (seg.weather_error === 'api_failure') {
-                    msg = 'Weather unavailable — the weather service did not respond. Try again later.';
-                } else if (seg.weather_error === 'parse_error') {
-                    msg = 'Weather unavailable — could not read forecast for this date.';
-                }
-                return '<div class="mt-2 pt-2 border-top"><span class="text-uppercase small text-muted fw-semibold">Weather</span><p class="small text-secondary mb-1">' + escapeHtml(msg) + (fdate ? ' <span class="text-muted">(' + escapeHtml(fdate) + ')</span>' : '') + '</p></div>';
-            }
-            if (avail === 'ok') {
-                const src = weatherSourceLabel(seg.weather_source);
-                const fetched = seg.weather_fetched_at ? 'Fetched (UTC): ' + escapeHtml(String(seg.weather_fetched_at)) : '';
-                const windowNote = seg.forecast_window_note ? escapeHtml(String(seg.forecast_window_note)) : '';
-                const cond = seg.condition ? escapeHtml(String(seg.condition).replace(/_/g, ' ')) : '';
-                const temp = seg.temp ? escapeHtml(String(seg.temp)) : '';
-                const rain = seg.precipitation_probability_max != null ? ' · Rain probability (max): ' + escapeHtml(String(seg.precipitation_probability_max)) + '%' : '';
-                const meta = [fetched, windowNote].filter(Boolean).join(' · ');
-                return '<div class="mt-2 pt-2 border-top"><span class="text-uppercase small text-muted fw-semibold">Weather</span><p class="small mb-1"><strong>' + cond + '</strong>' + (temp ? ' — ' + temp : '') + rain + '</p><p class="small text-muted mb-0">Source: ' + escapeHtml(src) + (fdate ? ' · Forecast date: ' + escapeHtml(fdate) : '') + (meta ? '<br>' + meta : '') + '</p></div>';
-            }
-            return '';
-        }
-
-        function setSavedBanner(visible) {
-            const el = document.getElementById('savedTripBanner');
-            if (el) el.style.display = visible ? 'block' : 'none';
-        }
-
-        function updatePdfDownloadButton() {
-            const w = document.getElementById('itinPdfDownloadWrap');
-            if (!w) return;
-            w.style.display = lastSavedItineraryId ? 'block' : 'none';
-        }
-
-        function updateItineraryActionsBar() {
-            const bar = document.getElementById('itinActionsBar');
-            const btnOpt = document.getElementById('btnOpenOptimizePanel');
-            const hasItin = !!(itineraryBundle && itineraryBundle.itinerary_version === 2 && Array.isArray(itineraryBundle.days) && itineraryBundle.days.length > 0);
-            if (bar) {
-                bar.style.display = (hasItin || lastSavedItineraryId) ? 'flex' : 'none';
-            }
-            if (btnOpt) {
-                btnOpt.style.display = hasItin ? 'inline-block' : 'none';
-            }
-            updatePdfDownloadButton();
-        }
-
-        function setOptimizePanelVisible(visible) {
-            const p = document.getElementById('optimizePanel');
-            if (!p) return;
-            p.style.display = visible ? 'block' : 'none';
-
-            if (!visible) {
-                hideOptimizationApplyUI();
-                removeOptimizeThreadMessages();
-                const psOpt = document.getElementById('pipelineStatusOptimize');
-                if (psOpt) psOpt.style.display = 'none';
-                const ow = document.getElementById('optimizeWorking');
-                if (ow) ow.style.display = 'none';
-                const hid = document.getElementById('optimizeRequestInput');
-                if (hid) hid.value = '';
-                const help = p.querySelector('details.optimize-help');
-                if (help) help.open = false;
-                const inp = document.getElementById('msgInput');
-                if (inp) {
-                    setTimeout(function () { inp.focus(); }, 0);
-                }
-            } else {
-                const inp = document.getElementById('msgInput');
-                if (inp) {
-                    setTimeout(function () {
-                        inp.focus();
-                        p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }, 0);
-                }
-            }
-            updateOptimizeControls();
-        }
-
-        async function downloadSavedPdf(savedId) {
-            if (!savedId) return;
-            const url = '/saved/' + encodeURIComponent(savedId) + '/pdf';
-            try {
-                const res = await fetch(url);
-                if (!res.ok) {
-                    alert('Could not download PDF.');
-                    return;
-                }
-                const cd = res.headers.get('Content-Disposition');
-                let fname = 'itinerary.pdf';
-                if (cd) {
-                    const m = /filename="([^"]+)"/.exec(cd);
-                    if (m) fname = m[1];
-                    else {
-                        const m2 = /filename=([^;\s]+)/.exec(cd);
-                        if (m2) fname = m2[1].trim();
-                    }
-                }
-                const blob = await res.blob();
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = fname;
-                a.click();
-                URL.revokeObjectURL(a.href);
-            } catch (e) {
-                alert('Could not download PDF.');
-            }
-        }
-
-        function updateDemoToolsVisibility() {
-            const section = document.getElementById('demoToolsSection');
-            if (!section) return;
-            const hasItin = !!(itineraryBundle && itineraryBundle.days && itineraryBundle.days.length > 0);
-            section.style.display = hasItin ? 'block' : 'none';
-        }
-
-        function showEventNotification(text) {
-            const el = document.getElementById('eventNotification');
-            const txt = document.getElementById('eventNotificationText');
-            if (!el || !txt) return;
-            txt.textContent = text;
-            el.style.display = 'block';
-            setTimeout(() => { el.style.display = 'none'; }, 8000);
-        }
-
-        function renderItinerary(raw) {
-            itinBody.innerHTML = '';
-            itineraryBundle = null;
-            let days = [];
-            if (raw && raw.itinerary_version === 2 && Array.isArray(raw.days)) {
-                itineraryBundle = raw;
-                days = raw.days;
-            }
-            updateDemoToolsVisibility();
-            if (!days.length) {
-                itinTable.style.display = 'none';
-                itinEmpty.style.display = 'block';
-                itinEmpty.textContent = 'No itinerary generated yet.';
-                const pp = document.getElementById('pricingPanels');
-                if (pp) { pp.style.display = 'none'; pp.innerHTML = ''; }
-                setOptimizePanelVisible(false);
-                updateOptimizeControls();
-                updateItineraryActionsBar();
-                return;
-            }
-            itinEmpty.style.display = 'none';
-            itinTable.style.display = 'table';
-            const pp = document.getElementById('pricingPanels');
-            if (pp) {
-                const fx = referenceFxHtml(raw);
-                const trp = tripPricingRollupHtml(raw);
-                const est = tripEstimatedRollupHtml(raw);
-                const refreshBlock = '<div class="d-flex flex-wrap align-items-center gap-2 mb-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnRefreshPricing">Refresh pricing</button><span class="small text-danger" id="pricingRefreshError" style="display:none;"></span></div>';
-                const showPricing = fx || trp || est || lastSavedItineraryId;
-                if (showPricing) {
-                    pp.style.display = 'block';
-                    pp.innerHTML = est + refreshBlock;
-                    // pp.innerHTML = fx + trp + est + refreshBlock;
-                    wireRefreshPricingButton();
-                } else {
-                    pp.style.display = 'none';
-                    pp.innerHTML = '';
-                }
-            }
-            days.forEach((day, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = 'itin-row';
-                tr.setAttribute('role', 'button');
-                tr.tabIndex = 0;
-                const dnum = day.day != null ? day.day : (idx + 1);
-                const title = day.title || ('Day ' + dnum);
-                const sum = day.summary || '';
-                const estCell = dayEstimatedRangeCellHtml(day);
-                tr.innerHTML = '<td class="fw-semibold">' + escapeHtml(String(dnum)) + '</td><td>' + escapeHtml(String(title)) + '</td><td class="d-none d-sm-table-cell text-muted small">' + escapeHtml(sum) + '</td><td class="d-none d-md-table-cell text-end small">' + estCell + '</td>';
-                tr.addEventListener('click', () => openDayModal(idx));
-                tr.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDayModal(idx); }
-                });
-                itinBody.appendChild(tr);
-            });
-            updateOptimizeControls();
-            updateItineraryActionsBar();
-        }
-
-        function newSegmentTemplate() {
-            return {
-                time_label: 'Morning',
-                title: 'Activity',
-                place_name: 'Place',
-                description: '',
-                meal_suggestion: '',
-                transport_note: '',
-                local_tip: '',
-                lat: null,
-                lon: null,
-                pricing: {
-                    availability: 'unavailable',
-                    source_id: null,
-                    fetched_at: null,
-                    amount: null,
-                    currency: null,
-                    error_code: 'no_integration',
-                    reason: 'Price not available from integrated sources'
-                }
-            };
-        }
-
-        function segFieldInput(label, field, value, multiline) {
-            const wrap = document.createElement('div');
-            wrap.className = 'mb-2';
-            const lab = document.createElement('label');
-            lab.className = 'form-label small mb-0';
-            lab.textContent = label;
-            let inp;
-            if (multiline) {
-                inp = document.createElement('textarea');
-                inp.rows = 2;
-                inp.className = 'form-control form-control-sm';
-            } else {
-                inp = document.createElement('input');
-                inp.type = 'text';
-                inp.className = 'form-control form-control-sm';
-            }
-            inp.setAttribute('data-field', field);
-            inp.dataset.field = field;
-            inp.value = value == null ? '' : String(value);
-            inp.readOnly = true;
-            wrap.appendChild(lab);
-            wrap.appendChild(inp);
-            return wrap;
-        }
-
-        function renderSegmentEditors() {
-            const host = document.getElementById('daySegEditors');
-            if (!host) return;
-            host.innerHTML = '';
-            const segs = editDaySnapshot.segments || [];
-            segs.forEach((seg, si) => {
-                const card = document.createElement('div');
-                card.className = 'day-seg-editor-card border rounded p-2 mb-3 bg-white';
-                card.setAttribute('data-seg-index', String(si));
-                card.dataset.segIndex = String(si);
-                const h = document.createElement('div');
-                h.className = 'small fw-semibold text-muted mb-2';
-                h.textContent = 'Segment ' + (si + 1);
-                card.appendChild(h);
-                const fieldsWrap = document.createElement('div');
-                fieldsWrap.className = 'day-seg-fields';
-                fieldsWrap.appendChild(segFieldInput('Time label', 'time_label', seg.time_label, false));
-                fieldsWrap.appendChild(segFieldInput('Title', 'title', seg.title, false));
-                fieldsWrap.appendChild(segFieldInput('Place', 'place_name', seg.place_name, false));
-                fieldsWrap.appendChild(segFieldInput('Description', 'description', seg.description, true));
-                fieldsWrap.appendChild(segFieldInput('Meal idea', 'meal_suggestion', seg.meal_suggestion, false));
-                fieldsWrap.appendChild(segFieldInput('Transport note', 'transport_note', seg.transport_note, false));
-                fieldsWrap.appendChild(segFieldInput('Local tip', 'local_tip', seg.local_tip, false));
-                card.appendChild(fieldsWrap);
-                // const pricingInfo = document.createElement('div');
-                // pricingInfo.innerHTML = segmentPricingHtml(seg) + segmentEstimatedHtml(seg);
-                // card.appendChild(pricingInfo);
-                const btnRow = document.createElement('div');
-                btnRow.className = 'd-flex flex-wrap gap-1 mt-2';
-                const bu = document.createElement('button');
-                bu.type = 'button';
-                bu.className = 'btn btn-outline-secondary btn-sm';
-                bu.textContent = 'Move up';
-                bu.disabled = si === 0;
-                bu.addEventListener('click', () => moveSegment(si, -1));
-                const bd = document.createElement('button');
-                bd.type = 'button';
-                bd.className = 'btn btn-outline-secondary btn-sm';
-                bd.textContent = 'Move down';
-                bd.disabled = si >= segs.length - 1;
-                bd.addEventListener('click', () => moveSegment(si, 1));
-                const br = document.createElement('button');
-                br.type = 'button';
-                br.className = 'btn btn-outline-danger btn-sm';
-                br.textContent = 'Remove';
-                br.addEventListener('click', () => removeSegment(si));
-                btnRow.appendChild(bu);
-                btnRow.appendChild(bd);
-                btnRow.appendChild(br);
-                card.appendChild(btnRow);
-                host.appendChild(card);
-            });
-        }
-
-        function moveSegment(si, delta) {
-            const arr = editDaySnapshot.segments;
-            const j = si + delta;
-            if (j < 0 || j >= arr.length) return;
-            const t = arr[si];
-            arr[si] = arr[j];
-            arr[j] = t;
-            renderSegmentEditors();
-        }
-
-        function addSegment() {
-            const err = document.getElementById('dayEditError');
-            if (err) { err.style.display = 'none'; err.textContent = ''; }
-            editDaySnapshot.segments = editDaySnapshot.segments || [];
-            editDaySnapshot.segments.push(newSegmentTemplate());
-            renderSegmentEditors();
-        }
-
-        function removeSegment(si) {
-            const err = document.getElementById('dayEditError');
-            if (editDaySnapshot.segments.length <= 1) {
-                if (err) {
-                    err.textContent = 'Each day must have at least one segment.';
-                    err.style.display = 'block';
-                }
-                return;
-            }
-            if (err) { err.style.display = 'none'; }
-            editDaySnapshot.segments.splice(si, 1);
-            renderSegmentEditors();
-        }
-
-        function readFormIntoEditSnapshot() {
-            const titleEl = document.getElementById('dayEditTitle');
-            if (titleEl) editDaySnapshot.title = titleEl.value.trim();
-            const sumEl = document.getElementById('dayEditSummary');
-            if (sumEl) editDaySnapshot.summary = sumEl.value;
-            const host = document.getElementById('daySegEditors');
-            if (!host) return;
-            const segs = editDaySnapshot.segments || [];
-            segs.forEach((seg, si) => {
-                const card = host.querySelector('.day-seg-editor-card[data-seg-index="' + si + '"]');
-                if (!card) return;
-                const fieldsWrap = card.querySelector('.day-seg-fields');
-                const scope = fieldsWrap || card;
-                scope.querySelectorAll('input[data-field], textarea[data-field]').forEach(inp => {
-                    const f = inp.getAttribute('data-field');
-                    if (!f) return;
-                    const v = inp.value.trim();
-                    if (f === 'meal_suggestion' || f === 'transport_note' || f === 'local_tip') {
-                        seg[f] = v || null;
-                    } else if (f === 'description') {
-                        seg[f] = v;
-                    } else {
-                        seg[f] = v;
-                    }
-                });
-            });
-        }
-
-        async function saveDayEdits() {
-            const errEl = document.getElementById('dayEditError');
-            readFormIntoEditSnapshot();
-            const merged = JSON.parse(JSON.stringify(itineraryBundle));
-            merged.days[editDayIndex] = editDaySnapshot;
-            merged.itinerary_version = 2;
-            const useSaved = viewingSavedSnapshot && lastSavedItineraryId;
-            const url = useSaved
-                ? '/saved/' + encodeURIComponent(lastSavedItineraryId)
-                : '/itinerary';
-            const body = useSaved
-                ? JSON.stringify({ itinerary_bundle: merged })
-                : JSON.stringify({ itinerary: merged });
-            if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
-            try {
-                const res = await fetch(url, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: body
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    const errs = (data.detail && data.detail.errors) ? data.detail.errors : [data.detail || 'Save failed'];
-                    const msg = Array.isArray(errs) ? errs.join('; ') : String(errs);
-                    if (errEl) {
-                        errEl.textContent = msg;
-                        errEl.style.display = 'block';
-                    }
-                    return;
-                }
-                const newBundle = data.itinerary_bundle || data.itinerary;
-                if (newBundle) {
-                    itineraryBundle = newBundle;
-                    renderItinerary(itineraryBundle);
-                }
-                if (dayModal) dayModal.hide();
-                if (useSaved) loadMyTrips();
-            } catch (e) {
-                if (errEl) {
-                    errEl.textContent = 'Could not save changes.';
-                    errEl.style.display = 'block';
-                }
-            }
-        }
-
-        function renderDayEditForm() {
-            const day = editDaySnapshot;
-            const dnum = day.day != null ? day.day : (editDayIndex + 1);
-            document.getElementById('dayDetailModalLabel').textContent = 'Edit day ' + dnum;
-            dayDetailBody.innerHTML = '';
-            const root = document.createElement('div');
-            root.id = 'dayEditFormRoot';
-            root.className = 'day-edit-readonly';
-            const titleLab = document.createElement('label');
-            titleLab.className = 'form-label small';
-            titleLab.setAttribute('for', 'dayEditTitle');
-            titleLab.textContent = 'Day title (shown in itinerary list)';
-            const titleInp = document.createElement('input');
-            titleInp.type = 'text';
-            titleInp.className = 'form-control mb-3';
-            titleInp.id = 'dayEditTitle';
-            titleInp.readOnly = true;
-            titleInp.value = day.title != null ? String(day.title) : ('Day ' + dnum);
-            root.appendChild(titleLab);
-            root.appendChild(titleInp);
-            const sumLab = document.createElement('label');
-            sumLab.className = 'form-label small';
-            sumLab.textContent = 'Day summary';
-            const sumTa = document.createElement('textarea');
-            sumTa.className = 'form-control mb-3';
-            sumTa.id = 'dayEditSummary';
-            sumTa.rows = 2;
-            sumTa.readOnly = true;
-            sumTa.value = day.summary || '';
-            root.appendChild(sumLab);
-            root.appendChild(sumTa);
-            const segHost = document.createElement('div');
-            segHost.id = 'daySegEditors';
-            root.appendChild(segHost);
-            // const addBtn = document.createElement('button');
-            // addBtn.type = 'button';
-            // addBtn.className = 'btn btn-outline-secondary btn-sm mb-3';
-            // addBtn.textContent = 'Add segment';
-            // addBtn.addEventListener('click', addSegment);
-            // root.appendChild(addBtn);
-            const err = document.createElement('div');
-            err.id = 'dayEditError';
-            err.className = 'text-danger small mb-2';
-            err.style.display = 'none';
-            root.appendChild(err);
-            const saveBtn = document.createElement('button');
-            saveBtn.type = 'button';
-            saveBtn.className = 'btn btn-primary';
-            saveBtn.textContent = 'Save changes';
-            saveBtn.addEventListener('click', saveDayEdits);
-            root.appendChild(saveBtn);
-            dayDetailBody.appendChild(root);
-            renderSegmentEditors();
-        }
-
-        function openDayModal(dayIndex) {
-            if (!itineraryBundle || !itineraryBundle.days || !itineraryBundle.days[dayIndex]) return;
-            editDayIndex = dayIndex;
-            editDaySnapshot = JSON.parse(JSON.stringify(itineraryBundle.days[dayIndex]));
-            if (!editDaySnapshot.segments || editDaySnapshot.segments.length === 0) {
-                editDaySnapshot.segments = [newSegmentTemplate()];
-            }
-            renderDayEditForm();
-            if (!dayModal) dayModal = new bootstrap.Modal(dayDetailModalEl);
-            dayModal.show();
-        }
-
+        // Chat
         async function sendMessage() {
-            const text = msgInput.value.trim();
+            const input = document.getElementById('msgInput');
+            const text = input.value.trim();
             if (!text) return;
-            msgInput.value = '';
+            
+            input.value = '';
             appendChat('user', text);
-
-            const payload = { message: text };
-            if (viewingSavedSnapshot && lastSavedItineraryId) {
-                payload.saved_itinerary_id = lastSavedItineraryId;
-            }
-
-            const btnSend = document.getElementById('btnSend');
-            const stopPipeline = startPipeline('pipelineStatus', 'chat');
-            if (btnSend) btnSend.disabled = true;
-            msgInput.disabled = true;
+            
+            const pipeline = document.getElementById('pipelineStatus');
+            pipeline.classList.remove('hidden');
+            
             try {
                 const res = await fetch('/conversation/message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ message: text, saved_itinerary_id: lastSavedItineraryId })
                 });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    if (res.status === 404) {
-                        appendChat('assistant', 'That saved trip was not found.');
-                    } else {
-                        appendChat('assistant', 'Something went wrong. Please try again.');
-                    }
-                    return;
-                }
-
-                if (data.preference_scope) preferenceScope = data.preference_scope;
-
+                const data = await res.json();
+                
                 if (data.status === 'need_more') {
-                    appendChat('assistant', data.question || 'Could you add a bit more detail?');
-                    renderChips(data.partial_persona || {}, preferenceScope);
+                    appendChat('asst', data.question);
+                    renderPrefs(data.partial_persona);
                 } else if (data.status === 'generated') {
-                    const bundle = data.current_itinerary;
-                    if (data.replan_from_saved) {
-                        viewingSavedSnapshot = true;
-                        setSavedBanner(true);
-                    } else {
-                        viewingSavedSnapshot = false;
-                        setSavedBanner(false);
-                    }
-                    renderChips(data.partial_persona || data.persona || {}, preferenceScope);
-                    renderItinerary(bundle);
-                    lastSavedItineraryId = data.saved_itinerary_id || null;
-                    updateItineraryActionsBar();
-                    const n = (bundle && bundle.days) ? bundle.days.length : 0;
-                    if (n) {
-                        appendChat('assistant', 'Your ' + n + '-day itinerary is ready — click a day row for full detail.');
-                    }
-                    loadMyTrips();
+                    appendChat('asst', "Your itinerary is ready!");
+                    currentItinerary = data.current_itinerary;
+                    lastSavedItineraryId = data.saved_itinerary_id;
+                    renderItinerary(currentItinerary);
+                    renderPrefs(data.persona);
                 }
+            } catch (err) {
+                appendChat('asst', "Sorry, something went wrong.");
             } finally {
-                stopPipeline();
-                if (btnSend) btnSend.disabled = false;
-                msgInput.disabled = false;
+                pipeline.classList.add('hidden');
             }
         }
 
-        async function refreshState() {
-            if (viewingSavedSnapshot) return;
-            const res = await fetch('/state');
-            const data = await res.json();
-            renderChips(data.partial_persona || {}, 'session');
-            renderItinerary(data.itinerary);
+        function appendChat(role, text) {
+            const log = document.getElementById('chatLog');
+            const div = document.createElement('div');
+            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            
+            const inner = document.createElement('div');
+            inner.className = `${role === 'user' ? 'msg-user' : 'msg-asst'} p-4 shadow-sm text-sm leading-relaxed max-w-[90%]`;
+            inner.textContent = text;
+            
+            div.appendChild(inner);
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
         }
 
-        async function resetTrip() {
-            viewingSavedSnapshot = false;
-            setSavedBanner(false);
-            lastSavedItineraryId = null;
-            preferenceScope = 'session';
-            cachedPersonaPartial = {};
-            hideOptimizationApplyUI();
-            setOptimizePanelVisible(false);
-            await fetch('/conversation/reset', { method: 'POST' });
-            chatLog.innerHTML = '';
-            renderChips({}, 'session');
-            renderItinerary(null);
-            msgInput.focus();
-        }
-
-        function formatDateRange(start, end) {
-            if (start && end) return escapeHtml(String(start)) + ' – ' + escapeHtml(String(end));
-            if (start) return escapeHtml(String(start));
-            return '—';
-        }
-
-        async function loadMyTrips() {
-            const loading = document.getElementById('myTripsLoading');
-            const errEl = document.getElementById('myTripsError');
-            const empty = document.getElementById('myTripsEmpty');
-            const wrap = document.getElementById('myTripsWrap');
-            const body = document.getElementById('myTripsBody');
-            if (loading) loading.style.display = 'block';
-            if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
-            try {
-                const res = await fetch('/saved');
-                const rows = await res.json().catch(() => []);
-                if (!res.ok) throw new Error('Could not load trips');
-                if (loading) loading.style.display = 'none';
-                if (!Array.isArray(rows) || rows.length === 0) {
-                    if (empty) empty.style.display = 'block';
-                    if (wrap) wrap.style.display = 'none';
-                    return;
-                }
-                if (empty) empty.style.display = 'none';
-                if (wrap) wrap.style.display = 'block';
-                if (!body) return;
-                body.innerHTML = '';
-                rows.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'saved-trip-row';
-                    tr.tabIndex = 0;
-                    tr.setAttribute('role', 'button');
-                    const savedShort = row.created_at ? String(row.created_at).replace('T', ' ').slice(0, 16) : '—';
-                    tr.innerHTML =
-                        '<td>' + escapeHtml(row.title || '') + '</td>' +
-                        '<td>' + escapeHtml(row.destination || '') + '</td>' +
-                        '<td>' + formatDateRange(row.trip_date_start, row.trip_date_end) + '</td>' +
-                        '<td class="d-none d-md-table-cell text-muted small">' + escapeHtml(savedShort) + '</td>' +
-                        '<td class="text-end" data-pdf-cell="1"><button type="button" class="btn btn-outline-primary saved-trip-pdf-btn">PDF</button></td>';
-                    tr.addEventListener('click', (ev) => {
-                        if (ev.target.closest && ev.target.closest('[data-pdf-cell]')) return;
-                        openSavedItinerary(row.id);
-                    });
-                    tr.addEventListener('keydown', e => {
-                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSavedItinerary(row.id); }
-                    });
-                    const pdfBtn = tr.querySelector('[data-pdf-cell] button');
-                    if (pdfBtn) {
-                        pdfBtn.addEventListener('click', (ev) => {
-                            ev.stopPropagation();
-                            downloadSavedPdf(row.id);
-                        });
-                    }
-                    body.appendChild(tr);
-                });
-            } catch (e) {
-                if (loading) loading.style.display = 'none';
-                if (errEl) {
-                    errEl.style.display = 'block';
-                    errEl.textContent = 'Could not load saved trips.';
-                }
-            }
-        }
-
-        async function openSavedItinerary(id) {
-            if (!id) return;
-            try {
-                const res = await fetch('/saved/' + encodeURIComponent(id));
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    appendChat('assistant', 'Could not open that saved trip.');
-                    return;
-                }
-                viewingSavedSnapshot = true;
-                setSavedBanner(true);
-                lastSavedItineraryId = id;
-                preferenceScope = 'trip_saved';
-                const bundle = data.itinerary_bundle;
-                const persona = data.persona_snapshot || {};
-                renderChips(persona, 'trip_saved');
-                renderItinerary(bundle);
-            } catch (e) {
-                appendChat('assistant', 'Could not open saved trip.');
-            }
-        }
-
-        document.getElementById('btnSend').addEventListener('click', sendMessage);
-        msgInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-            const btnReset = document.getElementById('btnReset');
-            if (btnReset) {
-                btnReset.addEventListener('click', resetTrip);
-            }
-            const btnSend = document.getElementById('btnSend');
-            const btnSuggestions = document.getElementById('btnOptimizeItinerary');
-            const btnOpen = document.getElementById('btnOpenOptimizePanel');
-            const btnClose = document.getElementById('btnCloseOptimizePanel');
-
-            // 1. When "Places & optimization" is clicked
-            if (btnOpen) {
-                btnOpen.addEventListener('click', () => {
-                    if (btnSend) btnSend.style.display = 'none';
-                    if (btnSuggestions) btnSuggestions.style.display = 'block';
-                });
-            }
-
-            // 2. When "Close" is clicked
-            if (btnClose) {
-                btnClose.addEventListener('click', () => {
-                    if (btnSuggestions) btnSuggestions.style.display = 'none';
-                    if (btnSend) btnSend.style.display = 'block';
-                });
-            }
-            updateOptimizeControls();
-        });
-        const btnPdfItin = document.getElementById('btnDownloadPdfItin');
-        if (btnPdfItin) {
-            btnPdfItin.addEventListener('click', () => downloadSavedPdf(lastSavedItineraryId));
-        }
-
-        const btnOpenOptimizePanel = document.getElementById('btnOpenOptimizePanel');
-        if (btnOpenOptimizePanel) {
-            btnOpenOptimizePanel.addEventListener('click', function () {
-                const p = document.getElementById('optimizePanel');
-                if (!p) return;
-                const showing = p.style.display === 'block';
-                setOptimizePanelVisible(!showing);
-            });
-        }
-        const btnCloseOptimizePanel = document.getElementById('btnCloseOptimizePanel');
-        if (btnCloseOptimizePanel) {
-            btnCloseOptimizePanel.addEventListener('click', function () {
-                setOptimizePanelVisible(false);
-            });
-        }
-
-        const btnOptimize = document.getElementById('btnOptimizeItinerary');
-        if (btnOptimize) {
-            btnOptimize.addEventListener('click', runOptimization);
-        }
-
-        async function postSimulateEvent(eventType, payload) {
-            const body = { event_type: eventType, payload: payload || {} };
-            if (itineraryBundle && itineraryBundle.itinerary_version === 2 && Array.isArray(itineraryBundle.days) && itineraryBundle.days.length) {
-                body.itinerary_bundle = itineraryBundle;
-            }
-            if (cachedPersonaPartial && typeof cachedPersonaPartial === 'object' && Object.keys(cachedPersonaPartial).length) {
-                body.persona = cachedPersonaPartial;
-            }
-            const res = await fetch('/event/simulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                const detail = data.detail != null ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) : 'Event simulation failed.';
-                showEventNotification(detail);
+        function renderPrefs(persona) {
+            const chips = document.getElementById('prefChips');
+            if (!persona || Object.keys(persona).length === 0) {
+                chips.innerHTML = '<span class="text-xs text-slate-500">No preferences set</span>';
                 return;
             }
-            if (data.status === 'updated' && data.current_itinerary) {
-                itineraryBundle = data.current_itinerary;
-                renderItinerary(data.current_itinerary);
-                const changes = data.changes_applied;
-                let msg = 'Plan updated.';
-                if (Array.isArray(changes) && changes.length) {
-                    msg = 'Plan updated: ' + changes.map(function (c) { return String(c); }).join(' ');
+            
+            chips.innerHTML = '';
+            const fields = ['destination', 'trip_duration', 'trip_start_date', 'travel_style', 'budget_sensitivity'];
+            fields.forEach(f => {
+                if (persona[f]) {
+                    const span = document.createElement('span');
+                    span.className = 'chip text-[10px]';
+                    span.textContent = `${f.replace('_', ' ')}: ${persona[f]}`;
+                    chips.appendChild(span);
                 }
-                showEventNotification(msg);
-                if (!viewingSavedSnapshot) {
-                    refreshState();
+            });
+        }
+
+        // Itinerary
+        function renderItinerary(bundle) {
+            const wrap = document.getElementById('itinWrap');
+            const empty = document.getElementById('itinEmpty');
+            const body = document.getElementById('itinBody');
+            const totalEl = document.getElementById('trip-total');
+            
+            if (!bundle || !bundle.days || bundle.days.length === 0) {
+                wrap.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            wrap.classList.remove('hidden');
+            empty.classList.add('hidden');
+            body.innerHTML = '';
+            
+            // Trip total
+            if (bundle.pricing_rollups && bundle.pricing_rollups.trip) {
+                const tr = bundle.pricing_rollups.trip;
+                if (tr.api_backed_subtotal) {
+                    totalEl.innerHTML = `
+                        <p class="text-xs text-slate-400 font-medium uppercase">Est. Total</p>
+                        <p class="text-lg font-bold text-blue-600">${tr.api_backed_subtotal} ${tr.currency || 'USD'}</p>
+                    `;
                 }
-            } else if (data.status === 'ignored' && data.reason === 'itinerary_empty') {
-                showEventNotification('No itinerary in session. Generate a plan or open a saved trip so the trip appears here, then try again.');
-            } else if (data.status === 'error' && data.reason === 'replanner_returned_empty') {
-                showEventNotification('Could not update the plan — replanner returned an empty itinerary.');
-            } else {
-                showEventNotification('No changes applied.');
+            }
+
+            bundle.days.forEach((day, idx) => {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'bg-white rounded-2xl shadow-sm border p-6 cursor-pointer hover:border-blue-300 transition-all';
+                dayDiv.onclick = () => openDayModal(day);
+                
+                dayDiv.innerHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">D${day.day}</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">${day.title}</h4>
+                                <p class="text-xs text-slate-500">${day.summary}</p>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300"></i>
+                    </div>
+                    <div class="space-y-3">
+                        ${day.segments.slice(0, 2).map(seg => `
+                            <div class="flex items-start gap-3 pl-2 border-l-2 border-slate-100 py-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase w-12 pt-1">${seg.time_label}</span>
+                                <span class="text-sm text-slate-700 font-medium">${seg.title}</span>
+                            </div>
+                        `).join('')}
+                        ${day.segments.length > 2 ? `<p class="text-[10px] font-medium text-blue-500 pl-14">+ ${day.segments.length - 2} more activities</p>` : ''}
+                    </div>
+                `;
+                body.appendChild(dayDiv);
+            });
+            lucide.createIcons();
+        }
+
+        // Modals
+        function openDayModal(day) {
+            document.getElementById('dayDetailTitle').textContent = `Day ${day.day}: ${day.title}`;
+            const body = document.getElementById('dayDetailBody');
+            body.innerHTML = `
+                <p class="text-slate-600 text-sm mb-6">${day.summary}</p>
+                <div class="space-y-8">
+                    ${day.segments.map((seg, i) => `
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full ring-4 ring-blue-100"></div>
+                                ${i < day.segments.length - 1 ? '<div class="w-0.5 flex-1 bg-slate-100 my-2"></div>' : ''}
+                            </div>
+                            <div class="flex-1 pb-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">${seg.time_label}</span>
+                                    ${seg.weather ? `<span class="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full"><i data-lucide="sun" class="w-3 h-3"></i> ${seg.temp}°C</span>` : ''}
+                                </div>
+                                <h5 class="font-bold text-slate-800 text-lg">${seg.title}</h5>
+                                <p class="text-sm font-semibold text-slate-500 mb-2 flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${seg.place_name}</p>
+                                <p class="text-sm text-slate-600 leading-relaxed mb-4">${seg.description}</p>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    ${seg.meal_suggestion ? `
+                                        <div class="bg-orange-50 p-3 rounded-xl">
+                                            <p class="text-[10px] font-bold text-orange-600 uppercase mb-1">Dining Idea</p>
+                                            <p class="text-xs text-orange-800">${seg.meal_suggestion}</p>
+                                        </div>
+                                    ` : ''}
+                                    ${seg.local_tip ? `
+                                        <div class="bg-blue-50 p-3 rounded-xl">
+                                            <p class="text-[10px] font-bold text-blue-600 uppercase mb-1">Local Tip</p>
+                                            <p class="text-xs text-blue-800">${seg.local_tip}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                
+                                ${seg.pricing && seg.pricing.amount ? `
+                                    <div class="mt-4 pt-4 border-t flex items-center justify-between">
+                                        <span class="text-xs font-bold text-slate-400 uppercase">Estimated Price</span>
+                                        <span class="text-sm font-bold text-slate-800">${seg.pricing.amount} ${seg.pricing.currency}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${day.accommodation ? `
+                    <div class="mt-4 p-4 bg-slate-50 rounded-2xl border">
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-1">Accommodation</p>
+                        <p class="text-sm text-slate-800 font-medium">${day.accommodation}</p>
+                    </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('dayDetailModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('dayDetailModal').classList.add('hidden');
+        }
+
+        // My Trips
+        async function loadMyTrips() {
+            const wrap = document.getElementById('myTripsWrap');
+            const empty = document.getElementById('myTripsEmpty');
+            
+            try {
+                const res = await fetch('/saved');
+                const trips = await res.json();
+                
+                if (!trips || trips.length === 0) {
+                    wrap.classList.add('hidden');
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                
+                wrap.classList.remove('hidden');
+                empty.classList.add('hidden');
+                wrap.innerHTML = '';
+                
+                trips.forEach(trip => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-2xl shadow-sm border p-6 hover:border-blue-300 transition-all cursor-pointer flex items-center justify-between';
+                    card.onclick = () => openSavedTrip(trip.id);
+                    
+                    card.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                                <i data-lucide="map-pin"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">${trip.title || trip.destination}</h4>
+                                <p class="text-xs text-slate-500">${trip.trip_date_start || 'Dates TBA'} — ${trip.trip_date_end || ''}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="event.stopPropagation(); downloadPdf('${trip.id}')" class="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                                <i data-lucide="download" class="w-5 h-5"></i>
+                            </button>
+                            <i data-lucide="chevron-right" class="text-slate-300"></i>
+                        </div>
+                    `;
+                    wrap.appendChild(card);
+                });
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
             }
         }
 
-        document.getElementById('btnRain').addEventListener('click', async () => {
-            await postSimulateEvent('rain', { condition: 'rain' });
-        });
-        document.getElementById('btnPlaceClosed').addEventListener('click', async () => {
-            await postSimulateEvent('place_closed', {
-                day_index: 0,
-                segment_index: 0,
-                reason: 'Day 1, Segment 1 is closed for maintenance'
-            });
-        });
+        async function openSavedTrip(id) {
+            try {
+                const res = await fetch(`/saved/${id}`);
+                const data = await res.json();
+                currentItinerary = data.itinerary_bundle;
+                lastSavedItineraryId = id;
+                switchView('home');
+                renderItinerary(currentItinerary);
+                renderPrefs(data.persona_snapshot);
+                appendChat('asst', `Loading your trip to ${data.destination}.`);
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
-        refreshState();
-        loadMyTrips();
-        setInterval(refreshState, 4000);
+        async function downloadPdf(id) {
+            window.open(`/saved/${id}/pdf`, '_blank');
+        }
+
+        // YouTube Import
+        async function importYoutube() {
+            const url = document.getElementById('ytUrlInput').value.trim();
+            const date = document.getElementById('ytStartDate').value;
+            const style = document.getElementById('ytStyle').value;
+            
+            if (!url) return;
+            
+            const status = document.getElementById('ytStatus');
+            const btn = document.getElementById('btnImportYoutube');
+            
+            status.classList.remove('hidden');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            
+            try {
+                const res = await fetch('/import/youtube', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        persona: {
+                            trip_start_date: date,
+                            travel_style: style
+                        }
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.status === 'generated') {
+                    currentItinerary = data.current_itinerary;
+                    lastSavedItineraryId = data.saved_itinerary_id;
+                    switchView('home');
+                    renderItinerary(currentItinerary);
+                    renderPrefs(data.persona);
+                    appendChat('asst', `Success! I've imported the itinerary from the video. You can see it on the right.`);
+                    loadNotifications();
+                } else {
+                    alert("Import failed: " + (data.detail || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Import failed: " + err.message);
+            } finally {
+                status.classList.add('hidden');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        }
+
+        // Notifications
+        async function loadNotifications() {
+            const wrap = document.getElementById('notificationsWrap');
+            const empty = document.getElementById('notificationsEmpty');
+            
+            try {
+                const res = await fetch('/notifications');
+                const notes = await res.json();
+                
+                if (!notes || notes.length === 0) {
+                    wrap.classList.add('hidden');
+                    empty.classList.remove('hidden');
+                    updateUnreadCount(0);
+                    return;
+                }
+                
+                wrap.classList.remove('hidden');
+                empty.classList.add('hidden');
+                wrap.innerHTML = '';
+                
+                let unread = 0;
+                notes.forEach(n => {
+                    if (!n.is_read) unread++;
+                    
+                    const div = document.createElement('div');
+                    div.className = `p-4 rounded-xl border transition-all flex items-start gap-4 ${n.is_read ? 'bg-white text-slate-500' : 'bg-blue-50 border-blue-100 text-slate-800 font-medium'}`;
+                    
+                    div.innerHTML = `
+                        <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${n.is_read ? 'bg-slate-100' : 'bg-blue-100 text-blue-600'}">
+                            <i data-lucide="${n.type === 'youtube_import' ? 'youtube' : 'bell'}" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm">${n.message}</p>
+                            <span class="text-[10px] text-slate-400 mt-1 block">${new Date(n.created_at).toLocaleString()}</span>
+                        </div>
+                        ${!n.is_read ? `<button onclick="markAsRead('${n.id}')" class="text-[10px] font-bold text-blue-600 hover:underline">Mark as read</button>` : ''}
+                    `;
+                    wrap.appendChild(div);
+                });
+                
+                updateUnreadCount(unread);
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function markAsRead(id) {
+            await fetch(`/notifications/${id}/read`, { method: 'POST' });
+            loadNotifications();
+        }
+
+        function updateUnreadCount(count) {
+            unreadCount = count;
+            const dots = [document.getElementById('unread-count'), document.getElementById('unread-count-top')];
+            dots.forEach(dot => {
+                if (count > 0) dot.classList.remove('hidden');
+                else dot.classList.add('hidden');
+            });
+        }
+
+        // Personalization
+        async function openPersonalizeModal() {
+            if (!currentItinerary) return;
+            
+            // Clear history when opening for a new session or refresh
+            answeredGaps = []; 
+            
+            document.getElementById('personalizeModal').classList.remove('hidden');
+            document.getElementById('personalizeLoading').classList.remove('hidden');
+            document.getElementById('personalizeContent').classList.add('hidden');
+            document.getElementById('personalizeEmpty').classList.add('hidden');
+            
+            try {
+                const res = await fetch('/itinerary/personalize/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        itinerary_bundle: currentItinerary,
+                        saved_itinerary_id: lastSavedItineraryId
+                    })
+                });
+                const data = await res.json();
+                
+                document.getElementById('personalizeLoading').classList.add('hidden');
+                
+                if (data.gaps && data.gaps.length > 0) {
+                    renderGaps(data.gaps);
+                    document.getElementById('personalizeContent').classList.remove('hidden');
+                } else {
+                    document.getElementById('personalizeEmpty').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to analyze itinerary.");
+            }
+        }
+
+        function closePersonalizeModal() {
+            document.getElementById('personalizeModal').classList.add('hidden');
+        }
+
+        function renderGaps(gaps) {
+            const container = document.getElementById('personalizeContent');
+            container.innerHTML = '';
+            
+            // Render answered gaps first (history)
+            answeredGaps.forEach(item => {
+                const histDiv = document.createElement('div');
+                histDiv.className = 'completed-gap rounded-2xl p-4 shadow-sm mb-4 border border-slate-200';
+                histDiv.innerHTML = `
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">${item.prompt}</p>
+                    <p class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="check" class="w-3.5 h-3.5 text-green-600"></i> ${item.label}
+                    </p>
+                `;
+                container.appendChild(histDiv);
+            });
+
+            // Render only the FIRST unanswered gap (one-by-one)
+            if (gaps.length > 0) {
+                const gap = gaps[0];
+                const gapDiv = document.createElement('div');
+                gapDiv.className = 'bg-white border-2 border-blue-500 rounded-2xl p-6 shadow-md animate-in slide-in-from-bottom-4 duration-300';
+                
+                let optionsHtml = '';
+                if (gap.type === 'home_location') {
+                    optionsHtml = `
+                        <div class="flex flex-col gap-3 w-full">
+                            <input type="text" id="input-${gap.id}" class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Enter your home city (e.g., Ahmedabad, India)">
+                            <button onclick="const val = document.getElementById('input-${gap.id}').value; if(val) handleGapAction('${gap.id}', '${gap.prompt}', val, val)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow-sm">
+                                Save Home Location
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    optionsHtml = `
+                        <div class="grid grid-cols-1 gap-3">
+                            ${gap.options.map(opt => `
+                                <button onclick="handleGapAction('${gap.id}', '${gap.prompt}', '${opt.label}', '${opt.value}')" class="group flex flex-col items-start px-4 py-3 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left shadow-sm">
+                                    <span class="text-sm font-bold text-slate-800 group-hover:text-blue-700">${opt.label}</span>
+                                    ${opt.description ? `<span class="text-[10px] text-slate-500 mt-0.5">${opt.description}</span>` : ''}
+                                </button>
+                            `).join('')}
+                            ${gap.allow_custom ? `
+                                <div class="mt-4 pt-4 border-t border-dashed">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Or specify your own</p>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="custom-${gap.id}" class="flex-1 border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Type here...">
+                                        <button onclick="const val = document.getElementById('custom-${gap.id}').value; if(val) handleGapAction('${gap.id}', '${gap.prompt}', 'Custom: ' + val, val)" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-900 transition-colors">
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                gapDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">${gap.type.replace('_', ' ')}</p>
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-6 leading-tight">${gap.prompt}</h4>
+                    ${optionsHtml}
+                `;
+                container.appendChild(gapDiv);
+            }
+            lucide.createIcons();
+        }
+
+        async function handleGapAction(gapId, prompt, label, value) {
+            // If home_location, label is the value
+            const finalLabel = label || value;
+            const finalValue = value;
+
+            if (!finalValue) return;
+
+            // Save to history
+            answeredGaps.push({ id: gapId, prompt: prompt, label: finalLabel, value: finalValue });
+            
+            // Apply to backend
+            await applyPersonalization(gapId, finalValue);
+        }
+
+        async function applyPersonalization(gapId, optionValue) {
+            const content = document.getElementById('personalizeContent');
+            const loading = document.getElementById('personalizeLoading');
+            
+            // Keep content visible but dim it during one-by-one transitions
+            content.style.opacity = '0.5';
+            content.style.pointerEvents = 'none';
+            
+            try {
+                const res = await fetch('/itinerary/personalize/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        itinerary_bundle: currentItinerary,
+                        gap_id: gapId,
+                        option_value: optionValue,
+                        saved_itinerary_id: lastSavedItineraryId
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.ok) {
+                    currentItinerary = data.itinerary;
+                    renderItinerary(currentItinerary);
+                    
+                    // Re-analyze for NEXT gap
+                    const nextRes = await fetch('/itinerary/personalize/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            itinerary_bundle: currentItinerary,
+                            saved_itinerary_id: lastSavedItineraryId
+                        })
+                    });
+                    const nextData = await nextRes.json();
+                    
+                    content.style.opacity = '1';
+                    content.style.pointerEvents = 'auto';
+
+                    if (nextData.gaps && nextData.gaps.length > 0) {
+                        renderGaps(nextData.gaps);
+                    } else {
+                        document.getElementById('personalizeContent').classList.add('hidden');
+                        document.getElementById('personalizeEmpty').classList.remove('hidden');
+                    }
+                } else {
+                    alert("Failed to apply choice.");
+                    content.style.opacity = '1';
+                    content.style.pointerEvents = 'auto';
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to apply personalization.");
+                content.style.opacity = '1';
+                content.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Init
+        document.getElementById('btnSend').onclick = sendMessage;
+        document.getElementById('msgInput').onkeydown = e => e.key === 'Enter' && sendMessage();
+        document.getElementById('btnImportYoutube').onclick = importYoutube;
+        document.getElementById('btnDownloadPdfItin').onclick = () => downloadPdf(lastSavedItineraryId);
+        document.getElementById('btnPersonalize').onclick = openPersonalizeModal;
+
+        // Polling for notifications
+        setInterval(loadNotifications, 10000);
+        loadNotifications();
     </script>
 </body>
 </html>

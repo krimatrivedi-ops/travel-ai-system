@@ -61,7 +61,76 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
         )
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS notifications (
+            id TEXT PRIMARY KEY,
+            created_at TEXT NOT NULL,
+            type TEXT NOT NULL,
+            message TEXT NOT NULL,
+            payload TEXT,
+            is_read INTEGER DEFAULT 0
+        )
+        """
+    )
     conn.commit()
+
+
+def save_notification(ntype: str, message: str, payload: Optional[Dict[str, Any]] = None) -> str:
+    """Persist a notification."""
+    nid = str(uuid.uuid4())
+    created = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    payload_json = json.dumps(payload, ensure_ascii=False) if payload else None
+
+    conn = _connect()
+    try:
+        _ensure_schema(conn)
+        conn.execute(
+            """
+            INSERT INTO notifications (id, created_at, type, message, payload, is_read)
+            VALUES (?, ?, ?, ?, ?, 0)
+            """,
+            (nid, created, ntype, message, payload_json),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return nid
+
+
+def list_notifications() -> List[Dict[str, Any]]:
+    """List all notifications, newest first."""
+    conn = _connect()
+    try:
+        _ensure_schema(conn)
+        rows = conn.execute(
+            "SELECT id, created_at, type, message, payload, is_read FROM notifications ORDER BY created_at DESC"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    out = []
+    for row in rows:
+        out.append({
+            "id": row[0],
+            "created_at": row[1],
+            "type": row[2],
+            "message": row[3],
+            "payload": json.loads(row[4]) if row[4] else None,
+            "is_read": bool(row[5])
+        })
+    return out
+
+
+def mark_notification_as_read(nid: str) -> None:
+    """Mark a notification as read."""
+    conn = _connect()
+    try:
+        _ensure_schema(conn)
+        conn.execute("UPDATE notifications SET is_read = 1 WHERE id = ?", (nid,))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def _derive_trip_dates(persona: Dict[str, Any]) -> tuple[Optional[str], Optional[str]]:
